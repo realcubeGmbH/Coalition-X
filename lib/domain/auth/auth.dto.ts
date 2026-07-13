@@ -19,6 +19,14 @@ export interface LoginDto {
 }
 
 /**
+ * DTO for user login via email + DID (digital identity, no password)
+ */
+export interface LoginWithDidDto {
+  email: string;
+  did: string;
+}
+
+/**
  * DTO for user registration
  */
 export interface RegisterDto {

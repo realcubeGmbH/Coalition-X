@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.g,thub.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -42,6 +42,6 @@ next-env.d.ts
 
 /app/generated/prisma
 .cursor*
-
+.claude*
 /kpi-json
 /kpi-json-flat

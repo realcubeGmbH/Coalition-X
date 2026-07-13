@@ -29,6 +29,7 @@ import type {
 } from "@/lib/domain/oauth";
 import type {
   LoginDto,
+  LoginWithDidDto,
   RegisterDto,
   LoginResponseDto,
   RegisterResponseDto,
@@ -111,6 +112,81 @@ export class OAuthService {
       role: user.role,
       scopes,
       name: "Web login",
+      ipAddress: ctx.ipAddress,
+    });
+
+    // Log successful login
+    await auditService.log({
+      organizationId: user.organizationId,
+      userId: user.id,
+      action: "AUTH_LOGIN",
+      resource: "user",
+      resourceId: user.id,
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+
+    const organization: AuthOrganizationDto | null = isSystemAdmin
+      ? null
+      : {
+          id: user.organization!.id,
+          name: user.organization!.name,
+          type: user.organization!.type as OrgType,
+        };
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      organization,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt.toISOString(),
+    };
+  }
+
+  /**
+   * Authenticate a user with email + DID (digital identity).
+   *
+   * Used by the Erfassungs App. The DID is stored on the User (set at POM+
+   * sync time) and validated directly against it — on a match we issue
+   * tokens for that user. No password / 2FA.
+   */
+  async loginWithDid(dto: LoginWithDidDto, ctx: OAuthContext): Promise<LoginResponseDto> {
+    // Validate the email + DID pair directly against the user record
+    const user = await this.userRepo.findByEmailAndDid(dto.email, dto.did);
+
+    // Generic error to prevent enumeration of emails / DIDs
+    if (!user) {
+      throw new OAuthError("invalid_grant", "Invalid email or DID", 401);
+    }
+
+    // System admins don't need organization checks
+    const isSystemAdmin = user.role === "SYSTEM_ADMIN";
+
+    // For non-system-admin users, check organization status
+    if (!isSystemAdmin) {
+      if (!user.organization) {
+        throw new OAuthError("access_denied", "User has no associated organization", 403);
+      }
+      if (user.organization.status !== "ACTIVE") {
+        throw new OAuthError("access_denied", "Organization is not active", 403);
+      }
+    }
+
+    // Get scopes based on role
+    const scopes = this.getScopesForRole(user.role);
+
+    // Generate tokens (organizationId is null for system admins)
+    const tokens = await createTokenPair({
+      userId: user.id,
+      organizationId: user.organizationId,
+      role: user.role,
+      scopes,
+      name: "Erfassungs DID login",
       ipAddress: ctx.ipAddress,
     });
 

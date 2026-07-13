@@ -16,6 +16,7 @@ const publicRoutes = [
   "/register",
   "/docs/swagger",
   "/api/auth/login",
+  "/api/auth/login-did",
   "/api/auth/register",
   "/api/auth/token",
   "/api/health",

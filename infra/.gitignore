@@ -5,11 +5,24 @@
 
 # Terraform variables (contains secrets)
 *.tfvars
+*.tfvars.json
 !*.tfvars.example
+!*.tfvars.json.example
+
+# Saved plan files (contain the full resource diff, incl. secret values)
+*.tfplan
+tfplan
+plan.out
+
+# Terraform CLI config (may contain credentials)
+.terraformrc
+terraform.rc
 
 # Terraform directory
 .terraform/
-.terraform.lock.hcl
+
+# NOTE: .terraform.lock.hcl is intentionally NOT ignored — commit it so
+# provider versions are pinned and reproducible across the team.
 
 # Crash logs
 crash.log

@@ -128,25 +128,31 @@ output "deploy_commands" {
     
     # ============================================
     # PUSH NEW IMAGE TO ECR
+    # (--platform linux/amd64: Fargate runs x86_64; build explicitly so it
+    #  works from arm64 dev machines / Apple Silicon)
     # ============================================
     aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${aws_ecr_repository.main.repository_url}
-    docker build -t ${var.project_name} .
+    docker build --platform linux/amd64 -t ${var.project_name} .
     docker tag ${var.project_name}:latest ${aws_ecr_repository.main.repository_url}:latest
     docker push ${aws_ecr_repository.main.repository_url}:latest
-    
+
     # ============================================
     # FORCE NEW DEPLOYMENT
     # ============================================
     aws ecs update-service --cluster ${aws_ecs_cluster.main.name} --service ${aws_ecs_service.app.name} --force-new-deployment
-    
+
     # ============================================
-    # RUN DATABASE MIGRATIONS (uses public subnet for npm access)
+    # RUN DATABASE MIGRATIONS
+    # Use the PRIVATE subnets: the task reads DATABASE_URL from Secrets Manager
+    # via the VPC endpoint, which is only reachable privately. Public subnets +
+    # assignPublicIp=ENABLED fail with a Secrets Manager connection error. The
+    # image bundles the Prisma CLI, so no internet is needed for the migration.
     # ============================================
     aws ecs run-task \
       --cluster ${aws_ecs_cluster.main.name} \
       --task-definition ${aws_ecs_task_definition.migration.family} \
       --launch-type FARGATE \
-      --network-configuration "awsvpcConfiguration={subnets=[${join(",", aws_subnet.public[*].id)}],securityGroups=[${aws_security_group.ecs_service.id}],assignPublicIp=ENABLED}"
+      --network-configuration "awsvpcConfiguration={subnets=[${join(",", aws_subnet.private[*].id)}],securityGroups=[${aws_security_group.ecs_service.id}],assignPublicIp=DISABLED}"
     
     # ============================================
     # VIEW LOGS

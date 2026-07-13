@@ -62,7 +62,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.container_port) },
         { name = "HOSTNAME", value = "0.0.0.0" },
-        { name = "POM_PARTNER_ORG_ID", value = var.pom_partner_org_id }
+        { name = "POM_PARTNER_ORG_ID", value = var.pom_partner_org_id },
+        { name = "CORS_ALLOWED_ORIGINS", value = join(",", var.cors_allowed_origins) }
       ]
 
       secrets = [

@@ -59,6 +59,7 @@ export class PartnerSyncService {
       name: dto.user_id,
       passwordHash: initialSecretHash,
       role: "PARTNER_ADMIN",
+      did: dto.did,
       organization: { connect: { id: org.id } },
     });
 

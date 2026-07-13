@@ -18,6 +18,17 @@ export const LoginSchema = z.object({
 export type LoginInput = z.infer<typeof LoginSchema>;
 
 // =============================================================================
+// Login with DID (Erfassungs App — email + digital identity, no password/2FA)
+// =============================================================================
+
+export const LoginWithDidSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  did: z.string().min(1, "DID is required"),
+});
+
+export type LoginWithDidInput = z.infer<typeof LoginWithDidSchema>;
+
+// =============================================================================
 // Register
 // =============================================================================
 

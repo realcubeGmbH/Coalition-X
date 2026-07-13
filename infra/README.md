@@ -69,7 +69,9 @@ terraform output api_url
 aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $(terraform output -raw ecr_repository_url | cut -d'/' -f1)
 
 # Build and push
-docker build -t exchange-layer ..
+# --platform linux/amd64: Fargate runs x86_64; required when building from
+# an arm64 machine (Apple Silicon) or the task fails with "exec format error".
+docker build --platform linux/amd64 -t exchange-layer ..
 docker tag exchange-layer:latest $(terraform output -raw ecr_repository_url):latest
 docker push $(terraform output -raw ecr_repository_url):latest
 

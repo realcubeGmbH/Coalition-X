@@ -52,13 +52,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files for production
+# Copy Prisma schema + migrations for `prisma migrate deploy` (ECS migration task)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-# Prisma CLI + dotenv needed for `prisma migrate deploy` (ECS migration task)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/dotenv ./node_modules/dotenv
+# Copy the FULL node_modules (not a cherry-picked subset) so the Prisma CLI and
+# all of its transitive deps (e.g. effect, @prisma/config, @prisma/engines) are
+# present and `prisma migrate deploy` runs fully offline in the private subnets.
+# Placed after the standalone copy so it supersedes Next's trimmed node_modules.
+# Trade-off: larger image, but the migration task is reliable across Prisma upgrades.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 

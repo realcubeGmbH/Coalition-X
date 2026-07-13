@@ -95,6 +95,49 @@ export const KPIValueElementSchema: z.ZodType<KPIValueElement> = z.lazy(() =>
 );
 
 // =============================================================================
+// Completion year Value — KPI 1-2 (Fertigstellungsjahr)
+// =============================================================================
+
+/**
+ * The Fertigstellungsjahr (KPI 1-2) is a year, not a date. Accept a 4-digit
+ * year as a number (2016) or a plain numeric string ("2016"); reject dates
+ * ("2016-01-01"), non-integers, and years outside a sane range.
+ */
+export function isValidCompletionYear(value: unknown): boolean {
+  let year: number;
+  if (typeof value === "number") {
+    if (!Number.isInteger(value)) return false;
+    year = value;
+  } else if (typeof value === "string") {
+    if (!/^\d{4}$/.test(value.trim())) return false;
+    year = parseInt(value.trim(), 10);
+  } else {
+    return false;
+  }
+  const currentYear = new Date().getFullYear();
+  return year >= 1800 && year <= currentYear;
+}
+
+/** KPIValueElement whose Value must be a valid completion year (KPI 1-2). */
+export const KPIValueElementYearSchema: z.ZodType<KPIValueElement> = z.lazy(() =>
+  z.object({
+    Value: z
+      .union([z.string(), z.number(), z.boolean()])
+      .refine(isValidCompletionYear, {
+        message:
+          "Fertigstellungsjahr (KPI 1-2) must be a 4-digit year (e.g. 2016), not a date",
+      }),
+    SubmittedBy: z.string(),
+    SubmittedAt: z.string().datetime(),
+    AdditionalInformation: z.string().optional(),
+    Source: z.string().optional(),
+    ReasonForChangeOrUpdate: z.string().optional(),
+    Signature: SignatureSchema.optional(),
+    History: z.array(KPIValueElementYearSchema).optional(),
+  }),
+);
+
+// =============================================================================
 // KPIValueList — array KPIs (per V0.9.2 schema)
 // =============================================================================
 
@@ -232,7 +275,7 @@ export const KPIEnergyDataBySourceAndUseCollectionSchema: z.ZodType<KPIEnergyDat
 
 export const PropertyRelatedDataSchema = z.object({
   KPI_1_1_Date_Of_Building_Permit: KPIValueElementSchema.optional(),
-  KPI_1_2_Building_Completion_Year: KPIValueElementSchema.optional(),
+  KPI_1_2_Building_Completion_Year: KPIValueElementYearSchema.optional(),
   KPI_2_1_YearOfLastRetrofit: KPIValueListSchema.optional(),
   KPI_2_2_TypeOfLastRetrofit: KPIValueListSchema.optional(),
   KPI_3_1_Main_Use_Of_Building:

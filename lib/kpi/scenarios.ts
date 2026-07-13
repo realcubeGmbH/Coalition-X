@@ -2,7 +2,8 @@
  * Building Scenario Derivation & Mandatory KPI Enforcement
  *
  * Mirrors the erfassungs-app logic:
- * - Neubau/Bestand determined by construction year vs 2020-12-01 cutoff
+ * - Neubau/Bestand determined by building age: under 10 years old = Neubau,
+ *   10 years or older = Bestand (rolling window against the current year)
  * - Wohnen/Nichtwohnen determined by primary building use (KPI 3-1)
  * - Mandatory KPI matrix enforced on initial submission only
  */
@@ -37,10 +38,12 @@ export interface MissingKpi {
 // =============================================================================
 
 /**
- * Buildings with construction year on or after this date are classified as
- * Neubau (new construction). Before this date = Bestand (existing building).
+ * A building counts as Neubau (new) while it is under 10 years old; once its
+ * age reaches 10 years it is Bestand (existing). Age is a whole-year diff
+ * against the current year — e.g. in 2026 a completion year of 2016 gives
+ * 2026 - 2016 = 10 → Bestand.
  */
-const NEUBAU_CUTOFF = new Date("2020-12-01");
+const NEUBAU_MAX_AGE_YEARS = 10;
 
 const WOHNEN_VALUES = new Set([
   "Wohnen",
@@ -53,15 +56,14 @@ const WOHNEN_VALUES = new Set([
 // =============================================================================
 
 export function computeIsNeubau(constructionYear: string | number): boolean {
-  if (!constructionYear) return false;
+  const year =
+    typeof constructionYear === "number"
+      ? constructionYear
+      : parseInt(String(constructionYear).trim(), 10);
+  if (!Number.isInteger(year)) return false;
 
-  if (typeof constructionYear === "number") {
-    return new Date(`${constructionYear}-01-01`) >= NEUBAU_CUTOFF;
-  }
-
-  const parsed = new Date(constructionYear);
-  if (isNaN(parsed.getTime())) return false;
-  return parsed >= NEUBAU_CUTOFF;
+  const currentYear = new Date().getFullYear();
+  return currentYear - year < NEUBAU_MAX_AGE_YEARS;
 }
 
 export function computeIsWohnen(primaryUse: string): boolean {

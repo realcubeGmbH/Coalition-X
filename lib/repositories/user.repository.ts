@@ -59,6 +59,29 @@ export class UserRepository {
   }
 
   /**
+   * Find user by email + DID (digital identity), with organization.
+   * Used to authenticate Erfassungs App logins (email + DID, no password).
+   */
+  async findByEmailAndDid(
+    email: string,
+    did: string
+  ): Promise<UserWithOrganization | null> {
+    return prisma.user.findFirst({
+      where: { email: email.toLowerCase(), did },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            status: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
    * Check if email exists
    */
   async emailExists(email: string): Promise<boolean> {

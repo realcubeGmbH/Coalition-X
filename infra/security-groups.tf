@@ -119,6 +119,13 @@ resource "aws_security_group" "rds" {
 
   lifecycle {
     create_before_destroy = true
+
+    # The bastion->RDS ingress is managed by the separate
+    # aws_security_group_rule.rds_from_bastion resource (separate because the
+    # bastion is optional, count-gated on var.create_bastion). Inline ingress is
+    # otherwise authoritative and would delete that rule on every apply, causing
+    # perpetual drift. Ignore ongoing ingress changes so the two don't fight.
+    ignore_changes = [ingress]
   }
 }
 
