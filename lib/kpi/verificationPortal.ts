@@ -30,6 +30,8 @@ export interface SubmissionContext {
   signingStatus: SigningStatus;
   gueltigBis: string | null;
   overallStatus: OverallStatus;
+  /** C2 (Fraunhofer) energy-class calculation status for this submission. */
+  fraunhofer: { status: string | null; energyClass: string | null };
 }
 
 function mapSigningStatus(raw: string | undefined): SigningStatus {
@@ -64,7 +66,8 @@ export async function resolveSubmissionContext(
   if (!submission) return null;
 
   const assetId = submission.resourceId;
-  const [asset, latestRecord, latestSigning] = await Promise.all([
+  const [asset, latestRecord, latestSigning, fraunhoferRequest] =
+    await Promise.all([
     assetId
       ? prisma.asset.findUnique({
           where: { id: assetId },
@@ -84,10 +87,18 @@ export async function resolveSubmissionContext(
           select: { status: true },
         })
       : Promise.resolve(null),
+    prisma.fraunhoferRequest.findUnique({
+      where: { submissionId: submission.id },
+      select: { status: true },
+    }),
   ]);
 
   const signingStatus = mapSigningStatus(latestSigning?.status);
   const kpiData = (latestRecord?.kpiData as KpiData | null) ?? null;
+  const energyClass =
+    ((kpiData?.Energy_Performance as
+      | { KPI_7_2_Energy_Class?: { Value?: string } }
+      | undefined)?.KPI_7_2_Energy_Class?.Value) ?? null;
   const overallStatus: OverallStatus =
     signingStatus === "signed"
       ? "Verifiziert"
@@ -106,6 +117,7 @@ export async function resolveSubmissionContext(
     signingStatus,
     gueltigBis: extractGueltigBis(kpiData),
     overallStatus,
+    fraunhofer: { status: fraunhoferRequest?.status ?? null, energyClass },
   };
 }
 

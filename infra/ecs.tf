@@ -63,7 +63,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "PORT", value = tostring(var.container_port) },
         { name = "HOSTNAME", value = "0.0.0.0" },
         { name = "POM_PARTNER_ORG_ID", value = var.pom_partner_org_id },
-        { name = "CORS_ALLOWED_ORIGINS", value = join(",", var.cors_allowed_origins) }
+        { name = "CORS_ALLOWED_ORIGINS", value = join(",", var.cors_allowed_origins) },
+        { name = "FRAUNHOFER_API_URL", value = var.fraunhofer_api_url }
       ]
 
       secrets = [

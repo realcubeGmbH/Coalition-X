@@ -26,6 +26,7 @@ import { validateDependencies } from "./validators";
 import type { ValidationError } from "./validators";
 import { validateInitialSubmission, extractScenarioInputs } from "./scenarios";
 import { getKpiSigningService } from "../connectors/KpiSigningService";
+import { getFraunhoferService } from "../connectors/FraunhoferService";
 import { mintTrackingToken } from "../auth/trackingToken";
 import type { KpiRecord, ValidationStatus, DataSource } from "@prisma/client";
 import type { ServiceContext } from "../domain/shared";
@@ -592,6 +593,33 @@ export class KpiService {
         transactionId: submission.id,
         status: 400,
       };
+    }
+
+    // 11b. C2 — Fraunhofer energy-class calculation (BEFORE C3 signing, so the
+    // computed KPI 7-2 is part of the signed record). Source-agnostic: runs the
+    // same whether the submission came from the app or a machine API call.
+    // Never fails the submission — a Fraunhofer error is recorded, not thrown.
+    try {
+      const c2 = await getFraunhoferService().calculateAndApply({
+        kpiData: mergedData,
+        rawKpis: kpis as Record<string, unknown>,
+        assetId,
+        submissionId: submission.id,
+        userId: ctx.userId,
+      });
+      if (c2.applied) {
+        this.logger.info("C2 applied energy class", {
+          data: { energyClass: c2.energyClass },
+        });
+      } else if (c2.error) {
+        this.logger.warn("C2 failed; continuing without computed class", {
+          data: { error: c2.error },
+        });
+      }
+    } catch (err) {
+      this.logger.warn("C2 step errored; continuing", {
+        data: { error: err instanceof Error ? err.message : String(err) },
+      });
     }
 
     // 12. Evaluate completeness and determine validationStatus

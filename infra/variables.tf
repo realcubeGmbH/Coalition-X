@@ -110,6 +110,12 @@ variable "pom_partner_org_id" {
   default     = ""
 }
 
+variable "fraunhofer_api_url" {
+  description = "Base URL of the Fraunhofer/IBP energy-class calculation API (C2). Unauthenticated public service; the exchange layer is its only caller. Empty disables C2 (submissions proceed without a computed energy class)."
+  type        = string
+  default     = "https://ibpcoalitionx.azurewebsites.net"
+}
+
 variable "cors_allowed_origins" {
   description = "Browser origins allowed to call the API cross-site (e.g. the Erfassungs App domain). Comma-joined into the container's CORS_ALLOWED_ORIGINS env var. MUST be non-empty in production: an empty list means no Access-Control-Allow-Origin header is sent and every cross-origin browser request is blocked. Use full scheme+host, no trailing slash, e.g. \"https://erfassung.coalition-x.eu\"."
   type        = list(string)

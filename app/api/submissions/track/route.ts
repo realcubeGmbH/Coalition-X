@@ -54,6 +54,7 @@ export async function POST(request: Request) {
       dataVersion: ctx.dataVersion,
       validationStatus: ctx.validationStatus,
       signing: { status: ctx.signingStatus },
+      fraunhofer: ctx.fraunhofer,
       overallStatus: ctx.overallStatus,
       gueltigBis: ctx.gueltigBis,
     });
