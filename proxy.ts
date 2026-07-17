@@ -21,6 +21,9 @@ const publicRoutes = [
   "/api/auth/token",
   "/api/health",
   "/api/docs/swagger-json",
+  // Verification portal — public (authenticated by the signed JWS, not a session).
+  "/api/submissions/track",
+  "/api/verify/kpis",
 ];
 
 const protectedApiPrefix = "/api/";

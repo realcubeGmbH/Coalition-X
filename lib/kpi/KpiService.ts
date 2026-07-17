@@ -26,6 +26,7 @@ import { validateDependencies } from "./validators";
 import type { ValidationError } from "./validators";
 import { validateInitialSubmission, extractScenarioInputs } from "./scenarios";
 import { getKpiSigningService } from "../connectors/KpiSigningService";
+import { mintTrackingToken } from "../auth/trackingToken";
 import type { KpiRecord, ValidationStatus, DataSource } from "@prisma/client";
 import type { ServiceContext } from "../domain/shared";
 
@@ -80,6 +81,8 @@ export interface KpiSubmissionResult {
     createdAt: Date;
   };
   transactionId: string;
+  /** Signed JWS the user presents later to track this submission / verify it. */
+  trackingToken?: string;
   idempotent?: boolean;
   status: number;
 }
@@ -685,6 +688,15 @@ export class KpiService {
       userAgent: ctx.userAgent || undefined,
     });
 
+    // Signed tracking token — the user presents this later to track / verify.
+    const trackingToken = await mintTrackingToken({
+      submissionId: submission.id,
+      assetId: kpiRecord.assetId,
+      externalId: asset.externalId,
+      dataVersion: kpiRecord.dataVersion,
+      organizationId,
+    });
+
     return {
       data: {
         id: kpiRecord.id,
@@ -698,6 +710,7 @@ export class KpiService {
         ...(signingStatus === "signed" && signedKpiData && { kpiData: signedKpiData }),
       },
       transactionId: submission.id,
+      trackingToken,
       status: 201,
     };
   }

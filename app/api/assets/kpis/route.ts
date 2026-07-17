@@ -80,6 +80,7 @@ const handlePost: ApiHandler = async (request, auth) => {
       {
         data: result.data,
         transactionId: result.transactionId,
+        ...(result.trackingToken && { trackingToken: result.trackingToken }),
         ...(result.idempotent && { idempotent: true }),
       },
       { status: result.status }
