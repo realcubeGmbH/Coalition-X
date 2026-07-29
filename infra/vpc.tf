@@ -111,24 +111,59 @@ resource "aws_subnet" "database" {
 }
 
 # =============================================================================
-# NAT GATEWAY (Optional - for private subnet internet access)
+# NAT GATEWAY (private subnet internet access)
 # =============================================================================
-# Commented out to save costs - ECS tasks don't need internet access 
-# since Docker images are pre-built and pulled via VPC endpoints
+# The app's third-party calls need this: VPC endpoints only reach AWS services,
+# so without a NAT the tasks cannot reach the Trust Layer (C3) or Fraunhofer
+# (C2) at all. One gateway serves both AZs — cheaper than one per AZ, at the
+# cost of egress going down with that AZ. Its Elastic IP is the app's fixed
+# outbound address, so third parties can allowlist it (see `nat_public_ip`).
 
-# resource "aws_eip" "nat" {
-#   count  = var.availability_zones_count
-#   domain = "vpc"
-#   tags = { Name = "${var.project_name}-${var.environment}-nat-eip-${count.index + 1}" }
-# }
+# This account is at its Elastic IP quota, so allocating a fresh one fails with
+# AddressLimitExceeded. Set nat_eip_public_ip to an address that is already
+# allocated and unassociated to reuse it; leave it empty to allocate a new one.
+data "aws_eip" "nat_existing" {
+  count     = var.create_nat_gateway && var.nat_eip_public_ip != "" ? 1 : 0
+  public_ip = var.nat_eip_public_ip
+}
 
-# resource "aws_nat_gateway" "main" {
-#   count         = var.availability_zones_count
-#   allocation_id = aws_eip.nat[count.index].id
-#   subnet_id     = aws_subnet.public[count.index].id
-#   tags = { Name = "${var.project_name}-${var.environment}-nat-${count.index + 1}" }
-#   depends_on = [aws_internet_gateway.main]
-# }
+resource "aws_eip" "nat" {
+  count  = var.create_nat_gateway && var.nat_eip_public_ip == "" ? 1 : 0
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-nat-eip"
+  }
+}
+
+locals {
+  nat_eip_allocation_id = var.create_nat_gateway ? (
+    var.nat_eip_public_ip != "" ? data.aws_eip.nat_existing[0].id : aws_eip.nat[0].id
+  ) : null
+
+  nat_eip_public_ip = var.create_nat_gateway ? (
+    var.nat_eip_public_ip != "" ? data.aws_eip.nat_existing[0].public_ip : aws_eip.nat[0].public_ip
+  ) : null
+}
+
+resource "aws_nat_gateway" "main" {
+  count         = var.create_nat_gateway ? 1 : 0
+  allocation_id = local.nat_eip_allocation_id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-nat"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+resource "aws_route" "private_nat" {
+  count                  = var.create_nat_gateway ? var.availability_zones_count : 0
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main[0].id
+}
 
 # =============================================================================
 # ROUTE TABLES
@@ -148,12 +183,11 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Private route tables (no internet access)
+# Private route tables. Default route to the NAT gateway is added separately in
+# aws_route.private_nat so toggling create_nat_gateway doesn't churn the tables.
 resource "aws_route_table" "private" {
   count  = var.availability_zones_count
   vpc_id = local.vpc_id
-
-  # No default route - containers access AWS services via VPC endpoints
 
   tags = {
     Name = "${var.project_name}-${var.environment}-private-rt-${count.index + 1}"

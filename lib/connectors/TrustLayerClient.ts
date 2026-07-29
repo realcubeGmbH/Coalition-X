@@ -1,4 +1,5 @@
 import { Logger } from "../core/Logger";
+import { getTrustLayerToken } from "./trustLayerToken";
 
 // =============================================================================
 // Types — mirror the Trust Layer's seal/verify response shapes
@@ -89,14 +90,33 @@ export class TrustLayerError extends Error {
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 500;
 
+/**
+ * C3 runs inline in the submission path, so an unresponsive Trust Layer would
+ * otherwise hold the user's request open across all three retries. Kept above
+ * the ~5s target for POST /seal so a healthy-but-slow seal isn't cut off.
+ */
+const DEFAULT_TIMEOUT_MS = 10_000;
+
 export class TrustLayerClient {
   private baseUrl: string;
-  private token: string;
+  /** Set only to pin a static token; otherwise one is minted per request. */
+  private token?: string;
+  private timeoutMs: number;
   private logger: Logger;
 
-  constructor(config?: { baseUrl?: string; token?: string; logger?: Logger }) {
+  constructor(config?: {
+    baseUrl?: string;
+    token?: string;
+    timeoutMs?: number;
+    logger?: Logger;
+  }) {
     this.baseUrl = config?.baseUrl ?? process.env.TRUST_LAYER_URL ?? "";
-    this.token = config?.token ?? process.env.TRUST_LAYER_TOKEN ?? "";
+    this.token = config?.token;
+    const envTimeout = parseInt(process.env.TRUST_LAYER_TIMEOUT_MS ?? "", 10);
+    this.timeoutMs =
+      config?.timeoutMs ?? (Number.isFinite(envTimeout) && envTimeout > 0
+        ? envTimeout
+        : DEFAULT_TIMEOUT_MS);
     this.logger =
       config?.logger ?? new Logger({ connector: "TrustLayerClient" });
 
@@ -172,15 +192,35 @@ export class TrustLayerClient {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    // Short-lived and minted on demand — see lib/connectors/trustLayerToken.ts.
+    const token = this.token ?? (await getTrustLayerToken());
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (err) {
+      // 504 so postWithRetry treats it as transient. A timeout is not proof the
+      // Trust Layer didn't sign — a retry can produce a second signature, which
+      // the ledger chains rather than corrupting.
+      if (
+        err instanceof Error &&
+        (err.name === "TimeoutError" || err.name === "AbortError")
+      ) {
+        throw new TrustLayerError(
+          `Trust Layer ${path} timed out after ${this.timeoutMs}ms`,
+          504,
+        );
+      }
+      throw err;
+    }
 
     if (!res.ok) {
       const responseBody = await res.text().catch(() => "");

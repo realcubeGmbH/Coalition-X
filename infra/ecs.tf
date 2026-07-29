@@ -64,7 +64,12 @@ resource "aws_ecs_task_definition" "app" {
         { name = "HOSTNAME", value = "0.0.0.0" },
         { name = "POM_PARTNER_ORG_ID", value = var.pom_partner_org_id },
         { name = "CORS_ALLOWED_ORIGINS", value = join(",", var.cors_allowed_origins) },
-        { name = "FRAUNHOFER_API_URL", value = var.fraunhofer_api_url }
+        { name = "FRAUNHOFER_API_URL", value = var.fraunhofer_api_url },
+        { name = "TRUST_LAYER_URL", value = var.trust_layer_url },
+        { name = "TRUST_LAYER_SYSTEM_DID", value = var.trust_layer_system_did },
+        { name = "TRUST_LAYER_TIMEOUT_MS", value = tostring(var.trust_layer_timeout_ms) },
+        { name = "CONNECTOR_TOKEN_ISSUER", value = var.connector_token_issuer },
+        { name = "CONNECTOR_TOKEN_AUDIENCE", value = var.connector_token_audience }
       ]
 
       secrets = [
@@ -79,6 +84,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "JWT_REFRESH_SECRET"
           valueFrom = aws_secretsmanager_secret.jwt_refresh_secret.arn
+        },
+        {
+          name      = "CONNECTOR_TOKEN_PRIVATE_JWK"
+          valueFrom = aws_secretsmanager_secret.connector_token_key.arn
         }
       ]
 

@@ -63,7 +63,8 @@ resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
           aws_secretsmanager_secret.database_url.arn,
           aws_secretsmanager_secret.db_credentials.arn,
           aws_secretsmanager_secret.jwt_secret.arn,
-          aws_secretsmanager_secret.jwt_refresh_secret.arn
+          aws_secretsmanager_secret.jwt_refresh_secret.arn,
+          aws_secretsmanager_secret.connector_token_key.arn
         ]
       }
     ]
@@ -101,7 +102,8 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           aws_secretsmanager_secret.database_url.arn,
           aws_secretsmanager_secret.db_credentials.arn,
           aws_secretsmanager_secret.jwt_secret.arn,
-          aws_secretsmanager_secret.jwt_refresh_secret.arn
+          aws_secretsmanager_secret.jwt_refresh_secret.arn,
+          aws_secretsmanager_secret.connector_token_key.arn
         ]
       },
       {

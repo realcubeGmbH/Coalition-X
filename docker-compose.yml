@@ -41,6 +41,15 @@ services:
     environment:
       PORT: '4100'
       DATABASE_URL: postgresql://coalition:coalition_dev@postgres:5432/trust_layer
+      # Seal key + caller-token key. Values come from this repo's .env
+      # (generate with `node ../trust-layer/scripts/generate-signing-key.mjs`).
+      # The service refuses to start without them.
+      SIGNING_KID: ${SIGNING_KID}
+      SIGNING_ALG: ${SIGNING_ALG:-ES256}
+      SIGNING_PRIVATE_JWK: ${SIGNING_PRIVATE_JWK}
+      CONNECTOR_TOKEN_PUBLIC_JWK: ${CONNECTOR_TOKEN_PUBLIC_JWK}
+      CONNECTOR_TOKEN_ISSUER: ${CONNECTOR_TOKEN_ISSUER:-coalition-x-exchange-layer}
+      CONNECTOR_TOKEN_AUDIENCE: ${CONNECTOR_TOKEN_AUDIENCE:-coalition-x-trust-layer}
     depends_on:
       postgres:
         condition: service_healthy

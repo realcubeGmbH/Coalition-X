@@ -163,6 +163,20 @@ output "deploy_commands" {
 }
 
 # =============================================================================
+# OUTBOUND / TRUST LAYER
+# =============================================================================
+
+output "nat_public_ip" {
+  description = "The app's fixed outbound address. Allowlist this on the Trust Layer's security group (and anywhere else that restricts callers by IP). Null when create_nat_gateway is false, in which case the tasks have no internet access at all."
+  value       = local.nat_eip_public_ip
+}
+
+output "connector_token_key_secret_arn" {
+  description = "Secrets Manager ARN holding the private JWK the Exchange Layer mints Connector 3 tokens with. Set its value with `aws secretsmanager put-secret-value` — Terraform only creates the placeholder."
+  value       = aws_secretsmanager_secret.connector_token_key.arn
+}
+
+# =============================================================================
 # SUMMARY
 # =============================================================================
 

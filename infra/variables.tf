@@ -193,3 +193,53 @@ variable "ssl_policy" {
   type        = string
   default     = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 }
+
+# =============================================================================
+# OUTBOUND INTERNET (NAT)
+# =============================================================================
+
+variable "nat_eip_public_ip" {
+  description = "Public IP of an already-allocated, unassociated Elastic IP to use for the NAT gateway. Required while the account sits at its Elastic IP quota (allocating a new one returns AddressLimitExceeded). Empty allocates a fresh address."
+  type        = string
+  default     = ""
+}
+
+variable "create_nat_gateway" {
+  description = "Give the private subnets outbound internet access. Required for any third-party call the app makes — the Trust Layer (C3) and Fraunhofer (C2) are both unreachable without it, since VPC endpoints only cover AWS services. One NAT gateway serves all AZs (~$38/mo + data); set false to remove egress entirely."
+  type        = bool
+  default     = true
+}
+
+# =============================================================================
+# TRUST LAYER (C3)
+# =============================================================================
+
+variable "trust_layer_url" {
+  description = "Base URL of the Trust Layer signing service (C3). Empty disables signing — submissions still succeed, with signingStatus \"skipped\"."
+  type        = string
+  default     = ""
+}
+
+variable "trust_layer_system_did" {
+  description = "System-DID this Exchange Layer presents to the Trust Layer. Must match the `sub` of the bearer token in the trust-layer-token secret."
+  type        = string
+  default     = "did:web:coalitionx.org:systems:exchange-layer"
+}
+
+variable "connector_token_issuer" {
+  description = "`iss` claim of the Connector 3 tokens the Exchange Layer mints. Must match CONNECTOR_TOKEN_ISSUER on the Trust Layer."
+  type        = string
+  default     = "coalition-x-exchange-layer"
+}
+
+variable "connector_token_audience" {
+  description = "`aud` claim of the Connector 3 tokens. Must match CONNECTOR_TOKEN_AUDIENCE on the Trust Layer."
+  type        = string
+  default     = "coalition-x-trust-layer"
+}
+
+variable "trust_layer_timeout_ms" {
+  description = "Per-request timeout for Trust Layer calls. C3 runs inline in the submission path, so this bounds how long a slow Trust Layer can hold a user's request (3 attempts + backoff)."
+  type        = number
+  default     = 10000
+}
