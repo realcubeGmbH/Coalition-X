@@ -68,6 +68,13 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Trust the Coalition-X internal CA. The Trust Layer (C3) is reachable only
+# inside the VPC, so no public CA can issue for its name; it presents a
+# certificate from this CA instead. A CA certificate is public data — the
+# private key lives in Secrets Manager and never ships in an image.
+COPY --chown=nextjs:nodejs certs/coalition-x-internal-ca.pem /app/certs/coalition-x-internal-ca.pem
+ENV NODE_EXTRA_CA_CERTS=/app/certs/coalition-x-internal-ca.pem
+
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
 CMD ["node", "server.js"]
