@@ -28,6 +28,23 @@ Thumbs.db
 # Example/reference files
 docker-example
 
+# Terraform — provider binaries alone are ~680 MB and dominate the build
+# context. Nothing here is imported by the app. terraform.tfstate also holds
+# DB passwords and secrets, which must not enter a build context or image layer.
+infra
+
+# Reference KPI payloads — not read at runtime (no code references)
+kpi-json
+kpi-json-flat
+
+# Deploy/ops tooling — not needed inside the image
+scripts
+
+# Docs: keep swagger.yaml, which /api/docs/swagger-json reads at runtime
+# (app/api/docs/swagger-json/route.ts). Only the heavy extras are excluded.
+docs/architecture.*
+docs/*.code-workspace
+
 # Logs
 *.log
 npm-debug.log*
