@@ -139,6 +139,10 @@ export interface KpiRow {
   value: unknown;
   unit: string | null;
   verified: boolean;
+  /** ISO timestamp the value was submitted (KPI element `SubmittedAt`). */
+  submittedAt: string | null;
+  /** Free-text origin of the value (KPI element `Source`). */
+  source: string | null;
 }
 
 /** Flatten the signed KPI sections into a display table via the KPI registry. */
@@ -159,6 +163,11 @@ export function buildKpiTable(kpiData: KpiData, verified: boolean): KpiRow[] {
             : undefined;
       if (value === undefined) continue;
       const def = SCHEMA_KEY_MAP.get(schemaKey);
+      // Provenance for the report table's "Datum" / "Datensatzherkunft"
+      // columns. Both are optional in the V0.9.2 schema.
+      const submittedAt =
+        typeof element.SubmittedAt === "string" ? element.SubmittedAt : null;
+      const source = typeof element.Source === "string" ? element.Source : null;
       rows.push({
         kpiNumber: def?.number ?? schemaKey,
         section,
@@ -166,6 +175,8 @@ export function buildKpiTable(kpiData: KpiData, verified: boolean): KpiRow[] {
         value,
         unit: def?.unit ?? null,
         verified,
+        submittedAt,
+        source,
       });
     }
   }
