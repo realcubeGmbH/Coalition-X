@@ -276,7 +276,10 @@ model Submission {
   errors           Json?
   warnings         Json?
 
-  idempotencyKey String? @unique
+  /// Caller-supplied replay key. Unique *per organization*, not globally — it is
+  /// the caller's own reference, so two tenants may legitimately pick the same
+  /// value and neither may see the other's submission.
+  idempotencyKey String?
 
   ipAddress      String?
   userAgent      String?
@@ -295,6 +298,7 @@ model Submission {
   submittedAt DateTime  @default(now())
   completedAt DateTime?
 
+  @@unique([organizationId, idempotencyKey])
   @@index([organizationId, submittedAt])
   @@index([status])
   @@index([validationStatus])

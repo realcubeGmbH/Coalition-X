@@ -9,7 +9,7 @@
  */
 
 import prisma from "../prisma";
-import { ApiError } from "../core/ErrorHandler";
+import { ApiError, isUniqueConstraintError } from "../core/ErrorHandler";
 import { Logger } from "../core/Logger";
 import { schemaService } from "./SchemaService";
 import { isJsonObject, toJsonValue } from "../utils/json";
@@ -341,10 +341,12 @@ export class KpiService {
       throw ApiError.assetNotFound(assetId);
     }
 
-    // 3. Idempotency check
+    // 3. Idempotency check — scoped to the caller's org, because an idempotency
+    // key is the caller's own reference: an unscoped lookup would replay another
+    // tenant's submission (id and validation errors included).
     if (idempotencyKey) {
-      const existing = await prisma.submission.findUnique({
-        where: { idempotencyKey },
+      const existing = await prisma.submission.findFirst({
+        where: { idempotencyKey, organizationId },
         include: {
           kpiRecord: {
             include: {
@@ -353,6 +355,42 @@ export class KpiService {
           },
         },
       });
+
+      // A submission with no KpiRecord either failed validation (no record is
+      // created for those) or is still in flight. Replaying its stored outcome is
+      // the whole point of an idempotency key; falling through to the insert
+      // below hits the unique index and used to surface as a raw Prisma 500.
+      if (existing && !existing.kpiRecord) {
+        if (existing.validationStatus === "FAILED") {
+          this.logger.info("Idempotent request - replaying failed submission", {
+            data: { submissionId: existing.id },
+          });
+          return {
+            data: {
+              id: existing.id,
+              assetId,
+              externalId: asset.externalId,
+              dataVersion: 0,
+              schemaVersion: existing.kpiVersion ?? schema.version,
+              validationStatus: existing.validationStatus,
+              validationErrors:
+                (existing.validationErrors as object[] | null) ?? undefined,
+              createdAt: existing.submittedAt,
+            },
+            transactionId: existing.id,
+            idempotent: true,
+            // Same status as the original attempt — a replay reports the stored
+            // outcome, it does not turn a rejected payload into an accepted one.
+            status: 400,
+          };
+        }
+
+        // Still being processed: no outcome to replay yet, and re-running it
+        // would double-process the payload.
+        throw ApiError.conflict(
+          `A submission with idempotency_key "${idempotencyKey}" is already being processed`,
+        );
+      }
 
       if (existing && existing.kpiRecord) {
         this.logger.info("Idempotent request - returning existing result");
@@ -555,27 +593,43 @@ export class KpiService {
     }
 
     // 10. Create submission record (always, for audit trail)
-    const submission = await prisma.submission.create({
-      data: {
-        organizationId,
-        userId: ctx.isOrgLevel ? null : ctx.userId,
-        submissionType: "SINGLE",
-        resourceType: "KpiRecord",
-        resourceId: assetId,
-        sourceTag: "PARTNER",
-        status: validationStatus === "PASSED" ? "SUCCESS" : "FAILED",
-        validationStatus,
-        validationErrors:
-          validationErrors.length > 0
-            ? toJsonValue(validationErrors)
-            : undefined,
-        idempotencyKey,
-        requestPayload: toJsonValue(kpis),
-        kpiVersion: schema.version,
-        ipAddress: ctx.ipAddress,
-        userAgent: ctx.userAgent,
-      },
-    });
+    let submission;
+    try {
+      submission = await prisma.submission.create({
+        data: {
+          organizationId,
+          userId: ctx.isOrgLevel ? null : ctx.userId,
+          submissionType: "SINGLE",
+          resourceType: "KpiRecord",
+          resourceId: assetId,
+          sourceTag: "PARTNER",
+          status: validationStatus === "PASSED" ? "SUCCESS" : "FAILED",
+          validationStatus,
+          validationErrors:
+            validationErrors.length > 0
+              ? toJsonValue(validationErrors)
+              : undefined,
+          idempotencyKey,
+          requestPayload: toJsonValue(kpis),
+          kpiVersion: schema.version,
+          ipAddress: ctx.ipAddress,
+          userAgent: ctx.userAgent,
+        },
+      });
+    } catch (error) {
+      // Two identical requests raced past the idempotency check above. The loser
+      // cannot report the winner's outcome (it is still in flight), so answer
+      // with a conflict rather than letting the unique violation escape.
+      if (isUniqueConstraintError(error, "idempotencyKey")) {
+        this.logger.warn("Concurrent submission with same idempotency_key", {
+          data: { idempotencyKey },
+        });
+        throw ApiError.conflict(
+          `A submission with idempotency_key "${idempotencyKey}" is already being processed`,
+        );
+      }
+      throw error;
+    }
 
     // 11. If validation failed, return early
     if (validationStatus === "FAILED" || !mergedData) {

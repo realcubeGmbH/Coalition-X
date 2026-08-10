@@ -9,6 +9,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 // =============================================================================
 // Error Codes
@@ -308,11 +309,48 @@ export function isApiError(error: unknown): error is ApiError {
 }
 
 /**
- * Convert any error to an ApiError
+ * Whether an error is a unique-constraint violation (Prisma P2002), optionally
+ * on a specific column. Lets callers turn a race into a proper conflict instead
+ * of letting the driver error escape.
+ */
+export function isUniqueConstraintError(
+  error: unknown,
+  field?: string,
+): boolean {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== "P2002"
+  ) {
+    return false;
+  }
+  if (!field) return true;
+  const target = error.meta?.target;
+  return Array.isArray(target) && target.includes(field);
+}
+
+/**
+ * Convert any error to an ApiError.
+ *
+ * Prisma errors are mapped explicitly: they used to fall through to
+ * `internal(error.message)`, which answered a duplicate idempotency key with a
+ * 500 quoting the raw driver text ("Unique constraint failed on the fields:
+ * (`idempotencyKey`)") — wrong status, and it leaks column names.
  */
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) {
     return error;
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      const target = error.meta?.target;
+      const field = Array.isArray(target) ? target.join(", ") : undefined;
+      return ApiError.duplicate("Record", field);
+    }
+    if (error.code === "P2025") {
+      return ApiError.notFound("Record");
+    }
+    return ApiError.databaseError();
   }
 
   if (error instanceof Error) {

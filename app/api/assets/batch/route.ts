@@ -99,8 +99,13 @@ const handlePost: ApiHandler = async (request, auth) => {
 
     // Check idempotency
     if (body.idempotency_key) {
-      const existing = await prisma.submission.findUnique({
-        where: { idempotencyKey: body.idempotency_key },
+      // Scoped to the caller's org — an idempotency key is the caller's own
+      // reference, so an unscoped lookup can return another tenant's batch.
+      const existing = await prisma.submission.findFirst({
+        where: {
+          idempotencyKey: body.idempotency_key,
+          organizationId: auth.organizationId!,
+        },
         include: { batchItems: true },
       });
 

@@ -86,13 +86,18 @@ export class SubmissionService {
   }
 
   /**
-   * Find submission by idempotency key with KPI record
+   * Find submission by idempotency key with KPI record.
+   *
+   * The organization is required, not optional: an idempotency key is the
+   * caller's own reference, so a key-only lookup can resolve to another
+   * tenant's submission.
    */
   async findByIdempotencyKey(
-    key: string
+    key: string,
+    organizationId: string
   ): Promise<SubmissionWithKpiRecord | null> {
-    return prisma.submission.findUnique({
-      where: { idempotencyKey: key },
+    return prisma.submission.findFirst({
+      where: { idempotencyKey: key, organizationId },
       include: {
         kpiRecord: {
           include: {
