@@ -394,6 +394,10 @@ model FraunhoferRequest {
 model SigningRequest {
   id      String @id @default(cuid())
   assetId String
+  /// The KpiRecord (asset + dataVersion) this request signs. Without it a
+  /// request can only be found by asset, and an older attempt would be read as
+  /// the status of a newer submission. Loose FK, like assetId above.
+  kpiRecordId String?
 
   status         SigningStatus @default(PENDING)
   requestPayload Json?
@@ -425,6 +429,7 @@ model SigningRequest {
   updatedAt DateTime @updatedAt
 
   @@index([assetId])
+  @@index([kpiRecordId])
   @@index([status])
   @@map("signing_requests")
 }

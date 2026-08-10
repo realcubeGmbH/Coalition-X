@@ -17,8 +17,12 @@ resource "aws_ecs_task_definition" "migration" {
       image     = "${aws_ecr_repository.main.repository_url}:latest"
       essential = true
 
-      # Run Prisma migrations
-      command = ["npx", "prisma", "migrate", "deploy"]
+      # Run Prisma migrations, then seed the schema registry. Migrations create
+      # the schema_registries *table*; the seed puts the V0.9.2 row in it.
+      # Without that row, any submission naming its schema version explicitly
+      # fails with SCHEMA_NOT_FOUND — SchemaService.getSchemaByVersion looks it
+      # up exactly, with no fallback. Both steps are idempotent.
+      command = ["sh", "-c", "npx prisma migrate deploy && node prisma/seed.mjs"]
 
       environment = [
         { name = "NODE_ENV", value = "production" }

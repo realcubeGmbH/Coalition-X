@@ -1,0 +1,700 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"$id": "https://coalition-x.org/schemas/zia-kpi/basic-set/0.9.2/schema.json",
+	"title": "CoalitionX – Basic Set of KPIs",
+	"description": "KPIs from ZIA KPI list",
+	"type": "object",
+	"properties": {
+		"AssetID": {
+			"description": "AssetID of dataset",
+			"type": "string"
+		},
+		"MetaData": {
+			"title": "MetaData",
+			"description": "Meta data for this object",
+			"type": "object",
+			"properties": {
+				"LocalAssetID": {
+					"description": "Local Asset ID from, Client System - not used directly in CoalitionX",
+					"type": "string"
+				},
+				"BuildingName": {
+					"description": "Gebäude - Name",
+					"type": "string"
+				},
+				"BuildingPart": {
+					"description": "Gebäude - Gebäudeteil",
+					"type": "string"
+				},
+				"BuildingStreet": {
+					"description": "Gebäude - Straße",
+					"type": "string"
+				},
+				"BuildingNumber": {
+					"description": "Gebäude - Hausnummer ",
+					"type": "string"
+				},
+				"BuildingPostcode": {
+					"description": "Gebäude - Postleitzahl",
+					"type": "string"
+				},
+				"BuildingCity": {
+					"description": "Gebäude - Stadt",
+					"type": "string"
+				},
+				"BuildingState": {
+					"description": "Gebäude - Bundesland",
+					"type": "string"
+				},
+				"BuildingCountry": {
+					"description": "Gebäude - Land",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Property_Related_Data": {
+			"title": "Property_Related_Data",
+			"description": "KPIs for \"Objektbezogene Daten\"",
+			"type": "object",
+			"properties": {
+				"KPI_1_1_Date_Of_Building_Permit": {
+					"description": "Number 1-1: Building permitDate of building permit application \nNummer 1-1: BaugenehmigungDatum der vollständigen Einreichung des Bauantrags \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Building permit \nData Point :  Date of building permit application \nKPI Name :  Baugenehmigung \nDatenpunkt :  Datum der vollständigen Einreichung des Bauantrags \nUnit :  date \nOptional :  Data point obsolete if KPI 6-1 is met \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :   \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CM 7.1 SC / CM 7.7 DNSH / CM 7.7 SC \nSFDR :  PAI 18 \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  (SD.ODA.004) \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_1_2_Building_Completion_Year": {
+					"description": "Number 1-2: Building permitYear of construction \nNummer 1-2: BaugenehmigungFertigstellungsjahr \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Building permit \nData Point :  Year of construction \nKPI Name :  Baugenehmigung \nDatenpunkt :  Fertigstellungsjahr \nUnit :  year \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :   \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ODA.003 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_2_1_YearOfLastRetrofit": {
+					"description": "Number 2-1: ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_2_2_TypeOfLastRetrofit": {
+					"description": "Number 2-2: ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_3_1_Main_Use_Of_Building": {
+					"description": "Number 3-1: Building use type Main use of building \nNummer 3-1: GebäudenutzungsartHauptnutzung des Gebäudes \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Building use type \nData Point :  Primary use of building \nKPI Name :  Gebäudenutzungsart \nDatenpunkt :  Hauptnutzung des Gebäudes \nUnit :  Residential / Retail / Office / Hotel, accommodation and gastronomy / Healthcare and social / Industrial and logistics / Infrastructure (Energy/water, communication, transportation) / Recreation, culture and education / Mixed-use / Other \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.7 DNSH / CM 7.1 DNSH / CM 7.1 SC / CM 7.2 DNSH / CM 7.7 SC \nSFDR :   \nCSRD :   \nBanking_Regulations :  Basel, EBA \nDIN_SPEC_91475 :  SD.GEN.001 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElementUseofBuilding"
+				},
+				"KPI_4_1_Usage_Of_Fossil_Fuels": {
+					"description": "Number 4-1: Use for fossil fuelsUsage for extraction, storage, transport or manufacture of fossil fuels \nNummer 4-1: Verwendung für fossile BrennstoffeNutzung für Gewinnung, Lagerung, Beförderung oder Herstellung fossiler Brennstoffe \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Use for fossil fuels \nData Point :  Usage for extraction, storage, transport or manufacture of fossil fuels \nKPI Name :  Verwendung für fossile Brennstoffe \nDatenpunkt :  Nutzung für Gewinnung, Lagerung, Beförderung oder Herstellung fossiler Brennstoffe \nUnit :  % of net target rent [portfolio: % assets under management] \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :   \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.1 DNSH / CA 7.2 DNSH / CA 7.3 DNSH / CA 7.4 DNSH / CA 7.5 DNSH / CA 7.6 DNSH / CA 7.7 DNSH \nSFDR :  PAI 17 \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :   \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_5_1_Usage_Area_ThermalyConditioned_Residential": {
+					"description": "Number 5-1: Surface measureUsable area (heated or cooled) \nNummer 5-1: FlächenmaßNutzungsfläche (NF) (beheizt oder gekühlt) \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Surface measure \nData Point :  Usable area (heated or cooled) \nKPI Name :  Flächenmaß \nDatenpunkt :  Nutzungsfläche (NF) (beheizt oder gekühlt) \nUnit :  m² \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :   \nTaxonomy :  CA 7.1 DNSH / CA 7.7 DNSH / CE 3.1 SC / CE 3.2 SC / CM 7.1 SC / CM 7.2 SC \nSFDR :  PAI 18+19 \nCSRD :   \nBanking_Regulations :  CRR \nDIN_SPEC_91475 :  SD.FLA.003 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_5_2_NetFloorArea_ThermalyConditioned_NonResidential": {
+					"description": "Number 5-2: Surface measureUseful internal floor area (heated or cooled) \nNummer 5-2: FlächenmaßNettogrundfläche (NGF) (beheizt oder gekühlt) \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Surface measure \nData Point :  Useful internal floor area (heated or cooled) \nKPI Name :  Flächenmaß \nDatenpunkt :  Nettogrundfläche (NGF) (beheizt oder gekühlt) \nUnit :  m² \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :   \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.1 DNSH / CA 7.7 DNSH / CE 3.1 SC / CE 3.2 SC / CM 7.1 SC / CM 7.1 SC / CM 7.2 SC \nSFDR :  PAI 18+19 \nCSRD :   \nBanking_Regulations :  CRR \nDIN_SPEC_91475 :  SD.FLA.002 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_5_3_GrossExternalArea": {
+					"description": "Number 5-3: Surface measureGross external area (IPMS 1) \nNummer 5-3: FlächenmaßBruttogrundfläche (BGF) \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Surface measure \nData Point :  Gross external area (IPMS 1) \nKPI Name :  Flächenmaß \nDatenpunkt :  Bruttogrundfläche (BGF) \nUnit :  m² \nOptional :  If available \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  (CM 7.1 SC) / CE 3.2 SC \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.FLA.001 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_5_4_GrossInternalArea": {
+					"description": "Number 5-4: Surface measureTotal gross internal area (IPMS 2) \nNummer 5-4: FlächenmaßBruttoinnenfläche (IPMS 2) \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Surface measure \nData Point :  Total gross internal area (IPMS 2) \nKPI Name :  Flächenmaß \nDatenpunkt :  Bruttoinnenfläche (IPMS 2) \nUnit :  m² \nOptional :  If available \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :   \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.FLA.011 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_5_5_Rental_Area": {
+					"description": "Number 5-5: Surface measureRental area \nNummer 5-5: FlächenmaßMietfläche \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Surface measure \nData Point :  Rental area \nKPI Name :  Flächenmaß \nDatenpunkt :  Mietfläche \nUnit :  m² \nOptional :  If available \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.FLA.007 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_6_1_Object_Is_Taxonomy_Aligned": {
+					"description": "Number 6-1: Taxonomy-alignmentObject/activity is taxonomy-aligned \nNummer 6-1: Taxonomie-KonformitätObjekt/Aktivität ist taxonomiekonform \nDomain :  Property-related data \nList :  KPI-Basic \nKPI Name :  Taxonomy-alignment \nData Point :  Object/activity is taxonomy-aligned \nKPI Name :  Taxonomie-Konformität \nDatenpunkt :  Objekt/Aktivität ist taxonomiekonform \nUnit :  yes / no \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :  yes \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  yes \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :   \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Energy_Performance": {
+			"title": "Energy_Performance",
+			"description": "KPIs for \"Energieperformance\"",
+			"type": "object",
+			"properties": {
+				"KPI_7_1_Energy_Performance_Certificate": {
+					"description": "Number 7-1: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) \nNummer 7-1: EnergieausweisEnergieausweis \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) \nKPI Name :  Energieausweis \nDatenpunkt :  Energieausweis \nUnit :  file \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.7 DNSH / CM 7.7 SC \nSFDR :  PAI 18 \nCSRD :  ESRS E1-9 \nBanking_Regulations :  CRR, EBA, ECB \nDIN_SPEC_91475 :  SD.ENP.007 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_2_Energy_Class": {
+					"description": "Number 7-2: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) class \nNummer 7-2: EnergieausweisEnergieausweis: Energieeffizienzklasse \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) class \nKPI Name :  Energieausweis \nDatenpunkt :  Energieausweis: Energieeffizienzklasse \nUnit :  alphanumerical \nOptional :  Only to be indicated if no digitally readable EPC is available \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.7 DNSH / CM 7.7 SC \nSFDR :  PAI 18 \nCSRD :  ESRS E1-9 \nBanking_Regulations :  CRR, EBA, ECB \nDIN_SPEC_91475 :  SD.ENP.007 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElementEnergyClass"
+				},
+				"KPI_7_3_Primary_Energy_Metered": {
+					"description": "Number 7-3: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) primary energy consumption \nNummer 7-3: EnergieausweisEnergie(verbrauchs)ausweis: Primärenergieverbrauch \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) primary energy consumption \nKPI Name :  Energieausweis \nDatenpunkt :  Energie(verbrauchs)ausweis: Primärenergieverbrauch \nUnit :  kWh/m²a \nOptional :  Only to be indicated if no digitally readable EPC is available (and consumption-based-EPC is present) \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ENP.004 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_4_Primary_Energy_Calculated": {
+					"description": "Number 7-4: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) primary energy demand \nNummer 7-4: EnergieausweisEnergie(bedarfs)ausweis: Primärenergiebedarf \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) primary energy demand \nKPI Name :  Energieausweis \nDatenpunkt :  Energie(bedarfs)ausweis: Primärenergiebedarf \nUnit :  kWh/m²a \nOptional :  Only to be indicated if no digitally readable EPC is available (and demand-based-EPC is present) \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.1 SC / CM 7.1 SC \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ENP.005 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_5_Delivered_Energy_Metered": {
+					"description": "Number 7-5: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) end energy consumption \nNummer 7-5: EnergieausweisEnergie(verbrauchs)ausweis: Endenergieverbrauch \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) end energy consumption \nKPI Name :  Energieausweis \nDatenpunkt :  Energie(verbrauchs)ausweis: Endenergieverbrauch \nUnit :  kWh/m²a \nOptional :  Only to be indicated if no digitally readable EPC is available (and consumption-based-EPC is present) \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ENP.004 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_6_Delivered_Energy_Calculated": {
+					"description": "Number 7-6: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) end energy demand \nNummer 7-6: EnergieausweisEnergie(bedarfs)ausweis: Endenergiebedarf \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) end energy demand \nKPI Name :  Energieausweis \nDatenpunkt :  Energie(bedarfs)ausweis: Endenergiebedarf \nUnit :  kWh/m²a [Total, Heating, Electricity] \nOptional :  Only to be indicated if no digitally readable EPC is available (and demand-based-EPC is present) \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :  CA 7.1 SC / CM 7.1 SC \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ENP.005 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_7_EPC_Expiry_Date": {
+					"description": "Number 7-7: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) expiry date \nNummer 7-7: EnergieausweisEnergieausweis: Gültigkeitsdatum \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) expiry date \nKPI Name :  Energieausweis \nDatenpunkt :  Energieausweis: Gültigkeitsdatum \nUnit :  date \nOptional :  Only to be indicated if no digitally readable EPC is available \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  SD.ENP.002 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_7_8_EPC_Type": {
+					"description": "Number 7-8: Energy Performance Certificate (EPC)Energy Performance Certificate (EPC) type \nNummer 7-8: EnergieausweisEnergieausweis: Art \nDomain :  Energy performance \nList :  KPI-Basic \nKPI Name :  Energy Performance Certificate (EPC) \nData Point :  Energy Performance Certificate (EPC) type \nKPI Name :  Energieausweis \nDatenpunkt :  Energieausweis: Art \nUnit :  Consumption-based / Demand-based / No obligation / Non-existent \nOptional :   \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :   \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueElement"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Energy_Consumption": {
+			"title": "Energyconsumption",
+			"description": "KPIs for \"Energieverbrauch\"",
+			"type": "object",
+			"properties": {
+				"KPI_8_1_EnergyCarriersForHeating": {
+					"description": "Number 8-1: Energy consumptionHeating medium \nNummer 8-1: EnergieverbrauchHeizmedium \nDomain :  Energy consumption  \nList :  KPI-Basic \nKPI Name :  Energy consumption \nData Point :  Heating medium \nKPI Name :  Energieverbrauch \nDatenpunkt :  Heizmedium \nUnit :  District heating / gas / oil / electricity / heat pump / hybrid (heat pump + gas) \nOptional :   \nRelevantFor_NewBuildings :  yes \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :  yes \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :   \nCSRD :   \nBanking_Regulations :   \nDIN_SPEC_91475 :  BD.WAE.004/005 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_8_2_MeteredEnergyConsumption": {
+					"description": "Number 8-2: ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_8_3_MeteredEnergyConsumptionAsTable": {
+					"description": "Number 8-3: ",
+					"$ref": "#/definitions/KPIEnergyDataBySourceAndUseCollection"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Greenhouse_Gases": {
+			"title": "Greenhouse_Gases",
+			"description": "KPIs for \"Treibhausgase\"",
+			"type": "object",
+			"properties": {
+				"KPI_9_1_DirectEmissions": {
+					"description": "Number 9-1: GHG emissionsDirect GHG emissions generated in/on real estate asset \nNummer 9-1: TreibhausgasemissionenDirekte Treibhausgasemissionen am/im Gebäude/Liegenschaft \nDomain :  Greenhouse gases \nList :  KPI-Basic \nKPI Name :  GHG emissions \nData Point :  Direct GHG emissions generated in/on real estate asset \nKPI Name :  Treibhausgasemissionen \nDatenpunkt :  Direkte Treibhausgasemissionen am/im Gebäude/Liegenschaft \nUnit :  t CO2e p.a. [please specify year(s)] \nOptional :   \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :   \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :  PAI 18 \nCSRD :  (ESRS E1-6) \nBanking_Regulations :   \nDIN_SPEC_91475 :  BD.THG.006 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_9_2_IndirectEmissions": {
+					"description": "Number 9-2: GHG emissionsIndirect GHG emissions generated from energy usage in/on real estate asset \nNummer 9-2: TreibhausgasemissionenIndirekte Treibhausgasemissionen aus Energienutzung am/im Gebäude/Liegenschaft \nDomain :  Greenhouse gases \nList :  KPI-Basic \nKPI Name :  GHG emissions \nData Point :  Indirect GHG emissions generated from energy usage in/on real estate asset \nKPI Name :  Treibhausgasemissionen \nDatenpunkt :  Indirekte Treibhausgasemissionen aus Energienutzung am/im Gebäude/Liegenschaft \nUnit :  t CO2e p.a. [please specify year(s)] \nOptional :   \nRelevantFor_NewBuildings :   \nRelevantFor_ExistingBuildings :  yes \nRelevantFor_Renovation :   \nRelevantFor_Demolition :   \nRelevantFor_Residential :  yes \nRelevantFor_NonResidential :  yes \nTaxonomy :   \nSFDR :  PAI 18 \nCSRD :  (ESRS E1-6) \nBanking_Regulations :   \nDIN_SPEC_91475 :  BD.THG.007 \nMadaster_Kreislaufwirtschaft_in_der_Immobilienfinanzierung :  ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_9_3_OtherIndirectEmissions": {
+					"description": "Number 9-3:  ",
+					"$ref": "#/definitions/KPIValueList"
+				},
+				"KPI_9_4_ShareOfEstimatedEmissions": {
+					"description": "Number 9-4:  ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_9_5_AreIndirectEmissionsBasedOnMarketOrOnLocation": {
+					"description": "Number 9-5: ",
+					"$ref": "#/definitions/KPIValueElement"
+				},
+				"KPI_9_6_CO2EmissionsFactorPerCarrier": {
+					"description": "Number 9-6: ",
+					"$ref": "#/definitions/KPIValueList"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Extended_Data": {
+			"title": "ExtendedData",
+			"description": "Verschiedene weitere Datenpunkte",
+			"type": "object",
+			"properties": {
+				"MaximumPrimaryEnergyDemand_Metered": {
+					"description": "Maximal zulässiger Primärenergiebedarf - Energiebedarf",
+					"type": "number"
+				},
+				"MaximumPrimaryEnergyDemand_Calculated": {
+					"description": "Maximal zulässiger Primärenergiebedarf - EnergieVerbrauch",
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		},
+		"Signature": {
+			"description": "JWS signature for this KPI set (detached payload).",
+			"$ref": "#/definitions/Signature"
+		}
+	},
+	"required": [
+		"AssetID",
+		"MetaData",
+		"Property_Related_Data",
+		"Energy_Performance",
+		"Energy_Consumption",
+		"Greenhouse_Gases"
+	],
+	"additionalProperties": false,
+	"definitions": {
+		"KPIBaseElement": {
+			"type": "object",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string"
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt"
+			],
+			"additionalProperties": false
+		},
+		"KPIValueElement": {
+			"type": "object",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string"
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				},
+				"Value": {
+					"description": "Value of the element",
+					"type": [
+						"string",
+						"number",
+						"boolean"
+					]
+				},
+				"History": {
+					"description": "History of previous values for the KPI element",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIValueElement"
+					},
+					"default": []
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt",
+				"Value"
+			],
+			"additionalProperties": false
+		},
+		"KPIValueList": {
+			"type": "object",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string"
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				},
+				"Values": {
+					"description": "List of KPI values",
+					"type": "array",
+					"items": {
+						"type": [
+							"string",
+							"number",
+							"boolean"
+						]
+					},
+					"default": []
+				},
+				"History": {
+					"description": "History of previous values",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIValueList"
+					},
+					"default": []
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt",
+				"Values"
+			],
+			"additionalProperties": false
+		},
+		"KPIValueElementUseofBuilding": {
+			"type": "object",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string"
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				},
+				"Value": {
+					"type": "string",
+					"enum": [
+						"Wohnen",
+						"Handel",
+						"Büro",
+						"Hotel",
+						"Beherbergung und Gastronomie",
+						"Gesundheit und Soziales",
+						"Industrie und Logistik",
+						"Infrastruktur (Energie/Wasser, Kommunikation, Verkehr)",
+						"Freizeit",
+						"Kultur und Bildung",
+						"Mixed-Use",
+						"Andere"
+					]
+				},
+				"History": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIValueElementUseofBuilding"
+					},
+					"default": []
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt"
+			],
+			"additionalProperties": false
+		},
+		"KPIValueElementEnergyClass": {
+			"type": "object",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string",
+					"enum": [
+						"Energieausweis",
+						"FraunhoferMethode",
+						"BVI",
+						"GModG",
+						"andere"
+					]
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				},
+				"Value": {
+					"type": "string",
+					"enum": [
+						"A+",
+						"A",
+						"B",
+						"C",
+						"D",
+						"E",
+						"F",
+						"G",
+						"Unbekannt"
+					]
+				},
+				"History": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIValueElementEnergyClass"
+					},
+					"default": []
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt"
+			],
+			"additionalProperties": false
+		},		
+		"KPIEnergyDataBySourceAndUseCollection": {
+			"type": "object",
+			"description": "Data collection for demand and consumption data, broken down by energy carrier and use.",
+			"properties": {
+				"SubmittedBy": {
+					"description": "Which DID did submit this element last?",
+					"type": "string"
+				},
+				"SubmittedAt": {
+					"description": "Date and time when this element was last submitted",
+					"type": "string",
+					"format": "date-time"
+				},
+				"AdditionalInformation": {
+					"description": "Field for additional information, not directly used",
+					"type": "string"
+				},
+				"Source": {
+					"type": "string"
+				},
+				"ReasonForChangeOrUpdate": {
+					"description": "Add reason for change of value or update here for all elements moved to history",
+					"type": "string"
+				},
+				"Signature": {
+					"description": "JWS signature for this individual KPI element (detached payload).",
+					"$ref": "#/definitions/Signature"
+				},
+				"Values": {
+					"description": "List of KPI values",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIEnergyDataBySourceAndUseItem"
+					},
+					"default": []
+				},
+				"History": {
+					"description": "History of previous values",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/KPIEnergyDataBySourceAndUseCollection"
+					},
+					"default": []
+				}
+			},
+			"required": [
+				"SubmittedBy",
+				"SubmittedAt",
+				"Values"
+			],
+			"additionalProperties": false
+		},
+		"KPIEnergyDataBySourceAndUseItem": {
+			"type": "object",
+			"description": "Data item for demand and consumption data, broken down by energy carrier and use.",
+			"properties": {
+				"Energy carrier": {
+					"description": "Name of ebergy carrier",
+					"type": "string"
+				},
+				"TotalValue": {
+					"description": "Added up total value",
+					"type": "number"
+				},
+				"Heating": {
+					"description": "Heating",
+					"type": "number"
+				},
+				"DomesticHotWater": {
+					"description": "Domestic hot water (DHW)",
+					"type": "number"
+				},
+				"Cooling": {
+					"description": "Cooling",
+					"type": "number"
+				},
+				"Lighting": {
+					"description": "Lighting",
+					"type": "number"
+				},
+				"Ventilation": {
+					"description": "Cooling",
+					"type": "number"
+				},
+				"AdditionalElectricityDemand": {
+					"description": "AdditionalElectricityDemand - Nutzerstrom",
+					"type": "number"
+				},
+				"StartDateForConsumption": {
+					"description": "Start date of consumption",
+					"type": "string",
+					"format": "date-time"
+				},
+				"EndDateForConsumption": {
+					"description": "End date of consumption",
+					"type": "string",
+					"format": "date-time"
+				},
+				"ConversionFactorPrimaryEnergy": {
+					"description": "Conversion factor primary energy",
+					"type": "number"
+				},
+				"ValuesAreBasedOnInferiorHeatingValue": {
+					"description": "Values are based on inferior heating value - Werte werden Heizwertbasiert angegeben",
+					"type": "boolean"
+				}
+				
+			},
+			"required": [
+			],
+			"additionalProperties": false
+		},
+		"Signature": {
+			"description": "A JWS (RFC 7515) signature with detached payload. The payload is the JCS (RFC 8785) canonicalisation of this document excluding the Signature field. Supports both compact serialisation (single or multiple signers) and JSON serialisation (multiple signers).",
+			"oneOf": [
+				{
+					"title": "JWS Compact Serialization (single)",
+					"description": "A single JWS Compact Serialization with detached payload (RFC 7515 Appendix F). Format: BASE64URL(header)..BASE64URL(signature).",
+					"type": "string",
+					"pattern": "^[A-Za-z0-9_-]+\\.\\.[A-Za-z0-9_-]+$"
+				},
+				{
+					"title": "JWS Compact Serialization (multiple)",
+					"description": "An array of JWS Compact Serialization strings, each with detached payload. Use when multiple signers provide independent compact signatures.",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]+\\.\\.[A-Za-z0-9_-]+$"
+					}
+				},
+				{
+					"title": "JWS JSON Serialization",
+					"description": "JWS JSON Serialization with detached payload (RFC 7515 §7.2). The 'payload' member is omitted. Supports multiple signatures.",
+					"type": "object",
+					"properties": {
+						"signatures": {
+							"description": "Array of signature objects, each with its own header and signature value.",
+							"type": "array",
+							"minItems": 1,
+							"items": {
+								"type": "object",
+								"properties": {
+									"protected": {
+										"description": "BASE64URL-encoded JWS Protected Header.",
+										"type": "string"
+									},
+									"header": {
+										"description": "Unprotected header parameters (e.g. kid, x5c).",
+										"type": "object"
+									},
+									"signature": {
+										"description": "BASE64URL-encoded JWS Signature.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"protected",
+									"signature"
+								]
+							}
+						}
+					},
+					"required": [
+						"signatures"
+					],
+					"additionalProperties": false
+				}
+			]
+		}
+	},
+	"_metadata": {
+		"project": "Coalition-X",
+		"document": "ZIA KPI Basic Set Schema",
+		"filename": "coalition-x-zia-kpi-basic-set.json",
+		"description": "JSON Schema for Coalition-X ESG_Dataset based on ZIA KPI list",
+		"author": "Simon Wössner (Fraunhofer IBP), Matthias L. Jugel",
+		"created": "2026-04-07",
+		"modified": "2026-04-25",
+		"version": "v0.9.2",
+		"license": "SPDX-License-Identifier: Proprietary",
+		"changelog": [
+			{
+				"date": "2026-04-07",
+				"author": "Simon Wössner",
+				"version": "v0.9.0",
+				"description": "Initial schema based on ZIA KPI list"
+			},
+			{
+				"date": "2026-04-21",
+				"author": "Matthias L. Jugel",
+				"version": "v0.9.1",
+				"description": "Schema updates and signing/verification example with JCS + ES256 + JWS Compact Detached"
+			},
+			{
+				"date": "2026-05-26",
+				"author": "Simon Wössner",
+				"version": "v0.9.2",
+				"description": "History elements updated, Reason for change or update added in History elements, KPI 8.3 changed to new type KPIEnergyDataBySourceAndUseCollection"
+			}
+		]
+	},
+	"version": "0.9.0",
+	"contentVersion": "2026-04",
+	"status": "draft"
+}

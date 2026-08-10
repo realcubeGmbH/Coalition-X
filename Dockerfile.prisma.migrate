@@ -14,7 +14,9 @@ RUN npm ci
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate --config prisma/prisma.config.ts
 
-# Run migrations using deploy command for production
-# Change CMD to use npx directly to ensure process exits after migration
-CMD ["npx", "prisma", "migrate", "deploy", "--config", "prisma/prisma.config.ts"]
+# Run migrations, then seed the schema registry. Migrations create the
+# schema_registries *table*; the seed puts the V0.9.2 row in it — without that,
+# any submission naming its schema version explicitly fails SCHEMA_NOT_FOUND.
+# Both steps are idempotent, and the process still exits when they finish.
+CMD ["sh", "-c", "npx prisma migrate deploy --config prisma/prisma.config.ts && node prisma/seed.mjs"]
 

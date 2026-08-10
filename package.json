@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev --config prisma/prisma.config.ts",
     "db:reset": "prisma migrate reset --config prisma/prisma.config.ts",
     "db:studio": "prisma studio --config prisma/prisma.config.ts",
-    "bootstrap": "npx tsx prisma/bootstrap.ts"
+    "bootstrap": "node prisma/seed.mjs",
+    "db:seed": "node prisma/seed.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

@@ -66,16 +66,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!ctx.kpiData) {
+    // No record of its own — e.g. the submission failed validation before one
+    // was created. Returning a neighbouring submission's KPIs here would
+    // misrepresent this request, so it is a 404.
+    if (!ctx.kpiData || !ctx.kpiRecordId) {
       return NextResponse.json(
         { error: "not_found", message: "No KPI data found for this submission" },
         { status: 404 },
       );
     }
 
-    const verified = ctx.assetId
-      ? await verifyRecordSignature(ctx.assetId, ctx.kpiData)
-      : false;
+    const verified = await verifyRecordSignature(ctx.kpiRecordId, ctx.kpiData);
 
     return NextResponse.json({
       asset: ctx.asset ?? { externalId: null, address: null },

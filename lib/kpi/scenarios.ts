@@ -8,6 +8,7 @@
  * - Mandatory KPI matrix enforced on initial submission only
  */
 
+import { BuildingUseEnum } from "./schema";
 import type { KpiData, KPIValueElement, KPIValueList } from "./schema";
 
 // =============================================================================
@@ -69,6 +70,27 @@ export function computeIsNeubau(constructionYear: string | number): boolean {
 export function computeIsWohnen(primaryUse: string): boolean {
   return WOHNEN_VALUES.has(primaryUse);
 }
+
+/**
+ * Whether KPI 3-1 carries a use this engine actually recognises.
+ *
+ * `computeIsWohnen` is a set-membership test, so an *unrecognised* value (a
+ * numeric ZIA code, a typo) is indistinguishable from a legitimate
+ * non-residential use like "Büro": it silently derives …Nichtwohnen, and the
+ * mandatory-KPI check then reports whichever KPIs that scenario wants —
+ * masking the real problem. Validate before deriving a scenario.
+ */
+export function isRecognisedBuildingUse(primaryUse: unknown): boolean {
+  return (
+    typeof primaryUse === "string" &&
+    (WOHNEN_VALUES.has(primaryUse) ||
+      BuildingUseEnum.safeParse(primaryUse).success)
+  );
+}
+
+/** The values KPI 3-1 accepts — used to make the rejection message actionable. */
+export const RECOGNISED_BUILDING_USES: readonly string[] =
+  BuildingUseEnum.options;
 
 export function deriveScenario(
   constructionYear: string | number,

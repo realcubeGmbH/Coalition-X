@@ -206,11 +206,21 @@ function enrichAsEnergyTable(
   userId: string,
   submittedAt: string,
 ): KPIEnergyDataBySourceAndUseCollection {
+  // Falling through with an empty `Values` here is how a scalar sent for KPI 8-3
+  // used to be stored and signed as "no data", with no error anywhere.
+  // C1InputSchema rejects that shape now, so this is an unreachable-by-API
+  // guard: loud beats losing the value.
+  if (typeof raw !== "object" || raw === null || !("values" in raw)) {
+    throw new Error(
+      `Table KPI value must be { values: [ … ] }, received ${typeof raw}`,
+    );
+  }
+
   let items: KPIEnergyDataBySourceAndUseItem[] = [];
   let additionalInfo: string | undefined;
   let reasonForChange: string | undefined;
 
-  if (typeof raw === "object" && raw !== null && "values" in raw) {
+  {
     const table = raw as {
       values: C1EnergyDataItemType[];
       additional_information?: string;

@@ -157,6 +157,9 @@ export class KpiSigningService {
     const signingRecord = await prisma.signingRequest.create({
       data: {
         assetId,
+        // Scopes the request to the exact record/version being signed, so a
+        // status consumer never picks up another submission's attempt.
+        kpiRecordId,
         status: "PENDING",
         requestPayload: toJsonValue(signingRequest),
         holderIdentity: signingRequest.identity.submitter_did,

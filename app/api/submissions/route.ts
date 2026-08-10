@@ -11,20 +11,14 @@ import { handleError } from "@/lib/core/ErrorHandler";
 import { calculateSkip, createPaginatedResult } from "@/lib/domain/shared";
 import prisma from "@/lib/prisma";
 import { mintTrackingToken } from "@/lib/auth/trackingToken";
+// The status shown on "Meine Nachrichten" and the status the verification portal
+// shows for the same submission come from the same helpers — deriving them twice
+// is how the two views drifted apart.
+import {
+  deriveOverallStatus,
+  resolveSigningStatuses,
+} from "@/lib/kpi/verificationPortal";
 import type { SubmissionStatus, ValidationStatus, SubmissionType, SourceTag } from "@prisma/client";
-
-/**
- * Map a submission's validation + latest signing state to the German status the
- * "Meine Nachrichten" page shows.
- */
-function deriveOverallStatus(
-  validationStatus: ValidationStatus,
-  signingStatus: "signed" | "pending" | "failed",
-): "Verifiziert" | "Ungültig" | "In Bearbeitung" {
-  if (signingStatus === "signed") return "Verifiziert";
-  if (validationStatus === "FAILED" || signingStatus === "failed") return "Ungültig";
-  return "In Bearbeitung";
-}
 
 // =============================================================================
 // GET - List Submissions for Organization
@@ -92,31 +86,22 @@ const handleGet: ApiHandler = async (request, auth) => {
       ),
     ];
 
-    const [assets, signingRequests] = await Promise.all([
+    const [assets, signingStatuses] = await Promise.all([
       prisma.asset.findMany({
         where: { id: { in: assetIds }, organizationId: auth.organizationId! },
         select: { id: true, externalId: true, address: true },
       }),
-      prisma.signingRequest.findMany({
-        where: { assetId: { in: assetIds } },
-        orderBy: { updatedAt: "desc" },
-        select: { assetId: true, status: true },
-      }),
+      // Per submission, via its own KpiRecord — an older attempt on the same
+      // asset must not become a newer submission's status.
+      resolveSigningStatuses(submissions.map((s) => s.id)),
     ]);
 
     const assetById = new Map(assets.map((a) => [a.id, a]));
-    // First (most recent) signing status per asset
-    const signingByAsset = new Map<string, string>();
-    for (const sr of signingRequests) {
-      if (!signingByAsset.has(sr.assetId)) signingByAsset.set(sr.assetId, sr.status);
-    }
 
     const rows = await Promise.all(
       submissions.map(async (s) => {
         const asset = s.resourceId ? assetById.get(s.resourceId) : undefined;
-        const rawSigning = s.resourceId ? signingByAsset.get(s.resourceId) : undefined;
-        const signingStatus: "signed" | "pending" | "failed" =
-          rawSigning === "SIGNED" ? "signed" : rawSigning === "FAILED" ? "failed" : "pending";
+        const signingStatus = signingStatuses.get(s.id) ?? "pending";
 
         return {
           id: s.id,

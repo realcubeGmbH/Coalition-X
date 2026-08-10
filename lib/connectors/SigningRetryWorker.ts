@@ -65,10 +65,18 @@ export class SigningRetryWorker {
           req.requestPayload as unknown as SigningRequest,
         );
 
-        const kpiRecord = await prisma.kpiRecord.findFirst({
-          where: { assetId: req.assetId },
-          orderBy: { dataVersion: "desc" },
-        });
+        // The record this request actually signed. Falling back to the asset's
+        // latest record (as this did before SigningRequest.kpiRecordId existed)
+        // could write one version's signatures onto another version's data.
+        const kpiRecord = req.kpiRecordId
+          ? await prisma.kpiRecord.findUnique({ where: { id: req.kpiRecordId } })
+          : null;
+
+        if (!kpiRecord) {
+          logger.warn("Retry signed but no linked KPI record to update", {
+            data: { signingRequestId: req.id, kpiRecordId: req.kpiRecordId },
+          });
+        }
 
         if (kpiRecord) {
           const updatedKpiData = getKpiSigningService().applySignaturesToKpiData(

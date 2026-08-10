@@ -24,7 +24,12 @@ import { KpiDataSchema } from "./schema";
 import type { KpiData } from "./schema";
 import { validateDependencies } from "./validators";
 import type { ValidationError } from "./validators";
-import { validateInitialSubmission, extractScenarioInputs } from "./scenarios";
+import {
+  validateInitialSubmission,
+  extractScenarioInputs,
+  isRecognisedBuildingUse,
+  RECOGNISED_BUILDING_USES,
+} from "./scenarios";
 import { getKpiSigningService } from "../connectors/KpiSigningService";
 import { getFraunhoferService } from "../connectors/FraunhoferService";
 import { mintTrackingToken } from "../auth/trackingToken";
@@ -446,6 +451,19 @@ export class KpiService {
               code: "MISSING_REQUIRED",
               message:
                 "KPI 3-1 (Primary use of building) is required on initial submission to determine building scenario",
+            },
+          ];
+          enrichedData = null;
+        } else if (!isRecognisedBuildingUse(scenarioInputs.primaryUse)) {
+          // 3-1 is present but not a use we know (e.g. a raw ZIA code). Deriving
+          // a scenario from it would silently assume Nichtwohnen and then report
+          // that scenario's missing KPIs instead of the actual problem.
+          validationStatus = "FAILED";
+          validationErrors = [
+            {
+              field: "Property_Related_Data.KPI_3_1_Main_Use_Of_Building",
+              code: "INVALID_VALUE",
+              message: `KPI 3-1 (Primary use of building) must be one of: ${RECOGNISED_BUILDING_USES.join(", ")} — received "${String(scenarioInputs.primaryUse)}"`,
             },
           ];
           enrichedData = null;

@@ -81,8 +81,10 @@ const handleGet: ApiHandler = async (_request, auth, context) => {
 
     const client = new TrustLayerClient();
 
+    // The seal for *this* version. The asset's newest seal belongs to whatever
+    // version was signed last and would not match this record's data.
     const signingRequest = await prisma.signingRequest.findFirst({
-      where: { assetId: id, status: "SIGNED" },
+      where: { kpiRecordId: kpiRecord.id, status: "SIGNED" },
       orderBy: { updatedAt: "desc" },
     });
 
