@@ -18,7 +18,7 @@ import { normalizeKpiInput } from "./normalizer";
 import { C1InputSchema } from "./c1-input";
 import type { C1Input } from "./c1-input";
 import { enrichKpiInput } from "./enricher";
-import { mergeKpiData, evaluateCompleteness } from "./merger";
+import { mergeKpiData } from "./merger";
 import type { MergeResult } from "./merger";
 import { KpiDataSchema } from "./schema";
 import type { KpiData } from "./schema";
@@ -28,6 +28,7 @@ import {
   validateInitialSubmission,
   extractScenarioInputs,
   isRecognisedBuildingUse,
+  evaluateCompleteness,
   RECOGNISED_BUILDING_USES,
 } from "./scenarios";
 import { getKpiSigningService } from "../connectors/KpiSigningService";
@@ -694,11 +695,42 @@ export class KpiService {
       });
     }
 
-    // 12. Evaluate completeness and determine validationStatus
+    // 12. Evaluate completeness and determine validationStatus.
+    // Complete = every KPI the building's scenario requires is present. PENDING
+    // means "accepted, but not signed yet because something is still missing".
     const completeness = evaluateCompleteness(mergedData);
     const recordValidationStatus: ValidationStatus = completeness.isComplete
       ? "PASSED"
       : "PENDING";
+
+    // Record *why* it is incomplete. This used to be computed and discarded, so
+    // an unsigned submission gave no clue what was missing — the caller saw only
+    // validationStatus PENDING and a status of "In Bearbeitung" that never moved.
+    const completenessErrors = completeness.isComplete
+      ? []
+      : completeness.blockedReason
+        ? [
+            {
+              field: "Property_Related_Data",
+              code: "SCENARIO_UNDETERMINED",
+              message: completeness.blockedReason,
+            },
+          ]
+        : completeness.missingKpis.map((kpi) => ({
+            field: `${kpi.section}.${kpi.schemaKey}`,
+            code: "MISSING_REQUIRED",
+            message: `KPI ${kpi.kpiNumber} (${kpi.label}) is required for ${completeness.scenario} before the record can be signed`,
+          }));
+
+    if (!completeness.isComplete) {
+      this.logger.info("Record incomplete for its scenario — signing skipped", {
+        data: {
+          scenario: completeness.scenario,
+          missing: completeness.missingKpis.map((k) => k.kpiNumber),
+          blockedReason: completeness.blockedReason,
+        },
+      });
+    }
 
     // 13. Create KPI record with merged data (optimistic locking via dataVersion)
     const latestVersion = await prisma.kpiRecord.findFirst({
@@ -720,6 +752,10 @@ export class KpiService {
         kpiData: toJsonValue(mergedData),
         checksum,
         validationStatus: recordValidationStatus,
+        validationErrors:
+          completenessErrors.length > 0
+            ? toJsonValue(completenessErrors)
+            : undefined,
         externalAssetId: asset.externalId || undefined,
         source: "API",
       },
@@ -805,6 +841,11 @@ export class KpiService {
         dataVersion: kpiRecord.dataVersion,
         schemaVersion: schema.version,
         validationStatus: recordValidationStatus,
+        // Accepted but unsigned: say what is still missing, so the caller does
+        // not have to guess why the status stays "In Bearbeitung".
+        ...(completenessErrors.length > 0 && {
+          validationErrors: completenessErrors,
+        }),
         signingStatus,
         createdAt: kpiRecord.createdAt,
         ...(signingStatus === "signed" && signedKpiData && { kpiData: signedKpiData }),

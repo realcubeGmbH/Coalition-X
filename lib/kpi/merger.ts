@@ -3,7 +3,6 @@ import type {
   KPIValueList,
   KPIEnergyDataBySourceAndUseCollection,
   KpiData,
-  KpiSectionName,
 } from "./schema";
 import { KPI_SECTIONS } from "./schema";
 import { SCHEMA_KEY_MAP } from "./registry";
@@ -188,38 +187,21 @@ function isConflict(existing: KpiElement, incoming: KpiElement): boolean {
 // Completeness Evaluation
 // =============================================================================
 
-export function evaluateCompleteness(data: KpiData): {
-  isComplete: boolean;
-  presentKpis: string[];
-  missingRequiredSections: KpiSectionName[];
-} {
-  const presentKpis = getAllKpiKeys(data);
-
-  const requiredSections: KpiSectionName[] = [
-    "Property_Related_Data",
-    "Energy_Performance",
-    "Energy_Consumption",
-    "Greenhouse_Gases",
-  ];
-
-  const missingRequiredSections = requiredSections.filter((section) => {
-    const sectionData = (data as Record<string, SectionData | undefined>)[
-      section
-    ];
-    return !sectionData || Object.keys(sectionData).length === 0;
-  });
-
-  return {
-    isComplete: missingRequiredSections.length === 0,
-    presentKpis,
-    missingRequiredSections,
-  };
-}
+// Completeness lives in ./scenarios now (`evaluateCompleteness`), judged against
+// the mandatory-KPI matrix for the building's own scenario.
+//
+// The rule that used to be here — "all four V0.9.2 sections must be non-empty" —
+// came from the ZIA schema's top-level `required`, and it contradicted that
+// matrix: a Neubau-Nichtwohnen building needs no GHG KPIs, yet an empty
+// Greenhouse_Gases section made the record incomplete, so signing was skipped
+// forever. A dataset cannot be both "valid per the rules we enforce" and "too
+// incomplete to sign".
 
 // =============================================================================
 // Helpers
 // =============================================================================
 
+/** "Section.KPI_x_y" for every KPI element present in the data. */
 function getAllKpiKeys(data: KpiData): string[] {
   const keys: string[] = [];
   for (const section of KPI_SECTIONS) {

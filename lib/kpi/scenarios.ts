@@ -8,7 +8,7 @@
  * - Mandatory KPI matrix enforced on initial submission only
  */
 
-import { BuildingUseEnum } from "./schema";
+import { BuildingUseEnum, KPI_SECTIONS } from "./schema";
 import type { KpiData, KPIValueElement, KPIValueList } from "./schema";
 
 // =============================================================================
@@ -290,6 +290,84 @@ export function validateInitialSubmission(
     scenario,
     missingKpis,
   };
+}
+
+export interface CompletenessResult {
+  /** True once every KPI the derived scenario requires is present. */
+  isComplete: boolean;
+  /** Null when 1-2 / 3-1 are missing or unrecognised, so no scenario applies. */
+  scenario: BuildingScenario | null;
+  presentKpis: string[];
+  missingKpis: MissingKpi[];
+  /** Set when completeness could not be evaluated at all. */
+  blockedReason?: string;
+}
+
+/**
+ * Is this dataset complete enough to sign?
+ *
+ * Judged against the mandatory-KPI matrix for the building's own scenario — the
+ * same rules the submitter is held to. It deliberately does **not** require every
+ * V0.9.2 section to be populated: the ZIA schema marks all four sections
+ * `required`, but the scenario matrix says e.g. a Neubau-Nichtwohnen building
+ * needs no GHG KPIs, and a dataset cannot be both "valid per the rules we
+ * enforce" and "too incomplete to sign". The scenario matrix wins.
+ *
+ * Replaces the old section-emptiness heuristic, which left submissions that
+ * satisfied every mandatory rule permanently unsigned.
+ */
+export function evaluateCompleteness(data: KpiData): CompletenessResult {
+  const presentKpis = getPresentKpiKeys(data);
+  const inputs = extractScenarioInputs(data);
+
+  if (!inputs) {
+    return {
+      isComplete: false,
+      scenario: null,
+      presentKpis,
+      missingKpis: [],
+      blockedReason:
+        "KPI 1-2 (Year of construction) and KPI 3-1 (Primary use of building) are required to determine the building scenario",
+    };
+  }
+
+  if (!isRecognisedBuildingUse(inputs.primaryUse)) {
+    return {
+      isComplete: false,
+      scenario: null,
+      presentKpis,
+      missingKpis: [],
+      blockedReason: `KPI 3-1 (Primary use of building) value "${String(inputs.primaryUse)}" is not a recognised use, so no scenario applies`,
+    };
+  }
+
+  const { scenario, missingKpis } = validateInitialSubmission(
+    data,
+    inputs.constructionYear,
+    inputs.primaryUse,
+  );
+
+  return {
+    isComplete: missingKpis.length === 0,
+    scenario,
+    presentKpis,
+    missingKpis,
+  };
+}
+
+/** "Section.KPI_x_y" for every KPI element present in the data. */
+function getPresentKpiKeys(data: KpiData): string[] {
+  const keys: string[] = [];
+  for (const section of KPI_SECTIONS) {
+    const sectionData = (data as Record<string, SectionData | undefined>)[
+      section
+    ];
+    if (!sectionData) continue;
+    for (const kpiKey of Object.keys(sectionData)) {
+      keys.push(`${section}.${kpiKey}`);
+    }
+  }
+  return keys;
 }
 
 /**
