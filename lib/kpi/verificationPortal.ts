@@ -246,27 +246,17 @@ export interface KpiRow {
 
 /** Flatten the signed KPI sections into a display table via the KPI registry. */
 /**
- * The only `Source` values a report may show. Anything else in a stored record is
- * historical noise — the literal "input" from before provenance existed, or an
- * Organization.name from the window when that was (wrongly) used — and is
- * replaced with the submitting system derived from the submission itself.
+ * Provenance shown in the report is *who submitted the data*, full stop:
+ * "Erfassungs App" or "Realcube Api". The stored `Source` is ignored for display.
  *
- * Normalising on read rather than rewriting records keeps the signed payload
- * untouched; only the report is corrected.
+ * Why an override rather than storing the right value everywhere: KPI 7-2's
+ * `Source` is a ZIA enum (Energieausweis / FraunhoferMethode / BVI / GModG /
+ * andere) and validation rejects a system name there, so it can only be corrected
+ * on the way out. The same override also cleans up historical values — the old
+ * "input" token and the Organization.name written during one bad release.
+ *
+ * The signed payload keeps whatever it was signed with; only the report changes.
  */
-const CANONICAL_SOURCES = new Set([
-  // Submitting systems
-  "Erfassungs App",
-  "Realcube Api",
-  // Computed inside Coalition-X
-  "FraunhoferMethode",
-  // KPI 7-2's ZIA enum (how the energy class was determined)
-  "Energieausweis",
-  "BVI",
-  "GModG",
-  "andere",
-]);
-
 export function buildKpiTable(
   kpiData: KpiData,
   verified: boolean,
@@ -292,10 +282,9 @@ export function buildKpiTable(
       // columns. Both are optional in the V0.9.2 schema.
       const submittedAt =
         typeof element.SubmittedAt === "string" ? element.SubmittedAt : null;
-      let source = typeof element.Source === "string" ? element.Source : null;
-      if (source && dataSource && !CANONICAL_SOURCES.has(source)) {
-        source = dataSource;
-      }
+      const storedSource =
+        typeof element.Source === "string" ? element.Source : null;
+      const source = dataSource ?? storedSource;
       rows.push({
         kpiNumber: def?.number ?? schemaKey,
         section,
