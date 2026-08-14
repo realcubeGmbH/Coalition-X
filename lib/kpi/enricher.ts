@@ -12,6 +12,17 @@ import type {
 export interface EnrichmentContext {
   userId: string;
   submittedAt?: string;
+  /**
+   * Provenance written to each element's `Source` — who supplied the value.
+   * "Erfassungs App" for a person using the app, the partner organisation's name
+   * for a machine-to-machine submission. Defaults to the old literal "input" so
+   * a caller that does not set it keeps the previous behaviour.
+   *
+   * KPI 7-2 is exempt: its Source is a ZIA enum describing *how the class was
+   * determined* (Energieausweis / FraunhoferMethode / BVI / GModG / andere), not
+   * which system sent it, so a system name there would fail validation.
+   */
+  source?: string;
 }
 
 export function enrichKpiInput(
@@ -19,6 +30,7 @@ export function enrichKpiInput(
   context: EnrichmentContext,
 ): KpiData {
   const submittedAt = context.submittedAt ?? new Date().toISOString();
+  const source = context.source ?? "input";
   const result: KpiData = {};
 
   if (input.asset_id) {
@@ -42,12 +54,14 @@ export function enrichKpiInput(
           rawValue,
           context.userId,
           submittedAt,
+          source,
         );
       } else if (def.elementType === "KPIValueList") {
         section[kpiKey] = enrichAsValueList(
           rawValue,
           context.userId,
           submittedAt,
+          source,
         );
       } else if (kpiKey === "KPI_7_2_Energy_Class") {
         section[kpiKey] = enrichAsEnergyClass(
@@ -60,6 +74,7 @@ export function enrichKpiInput(
           rawValue,
           context.userId,
           submittedAt,
+          source,
         );
       }
     }
@@ -77,6 +92,7 @@ function enrichAsValueElement(
   raw: C1ValueType,
   userId: string,
   submittedAt: string,
+  source: string,
 ): KPIValueElement {
   let value: string | number | boolean;
   let additionalInfo: string | undefined;
@@ -106,7 +122,7 @@ function enrichAsValueElement(
     Value: value,
     SubmittedBy: userId,
     SubmittedAt: submittedAt,
-    Source: "input",
+    Source: source,
     History: [],
   };
 
@@ -124,6 +140,7 @@ function enrichAsValueList(
   raw: C1ValueType,
   userId: string,
   submittedAt: string,
+  source: string,
 ): KPIValueList {
   let values: (string | number | boolean)[];
   let additionalInfo: string | undefined;
@@ -148,7 +165,7 @@ function enrichAsValueList(
     Values: values,
     SubmittedBy: userId,
     SubmittedAt: submittedAt,
-    Source: "input",
+    Source: source,
     History: [],
   };
 
@@ -205,6 +222,7 @@ function enrichAsEnergyTable(
   raw: C1ValueType,
   userId: string,
   submittedAt: string,
+  source: string,
 ): KPIEnergyDataBySourceAndUseCollection {
   // Falling through with an empty `Values` here is how a scalar sent for KPI 8-3
   // used to be stored and signed as "no data", with no error anywhere.
@@ -228,28 +246,22 @@ function enrichAsEnergyTable(
     };
     additionalInfo = table.additional_information;
     reasonForChange = table.reason_for_change;
-    items = table.values.map((item) => ({
-      "Energy carrier": item.energy_carrier,
-      TotalValue: item.total_value,
-      Heating: item.heating,
-      DomesticHotWater: item.domestic_hot_water,
-      Cooling: item.cooling,
-      Lighting: item.lighting,
-      Ventilation: item.ventilation,
-      AdditionalElectricityDemand: item.additional_electricity_demand,
-      StartDateForConsumption: item.start_date,
-      EndDateForConsumption: item.end_date,
-      ConversionFactorPrimaryEnergy: item.conversion_factor_primary_energy,
-      ValuesAreBasedOnInferiorHeatingValue:
-        item.values_based_on_inferior_heating_value,
-    }));
+
+    // Rows are stored exactly as submitted. The previous version rewrote the 12
+    // V0.9.2 fields into PascalCase and dropped everything else, which would
+    // silently discard the columns of the agreed table (Jahr, Nutzung, Scope,
+    // Klima-/Leerstandsbereinigung, per-row 9-x). No value here is derived,
+    // converted or renamed — the table is provenance-wrapped JSON.
+    items = table.values.map(
+      (item) => ({ ...item }) as unknown as KPIEnergyDataBySourceAndUseItem,
+    );
   }
 
   const element: KPIEnergyDataBySourceAndUseCollection = {
     Values: items,
     SubmittedBy: userId,
     SubmittedAt: submittedAt,
-    Source: "input",
+    Source: source,
     History: [],
   };
 

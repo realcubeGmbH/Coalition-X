@@ -2,10 +2,12 @@
  * Building Scenario Derivation & Mandatory KPI Enforcement
  *
  * Mirrors the erfassungs-app logic:
- * - Neubau/Bestand determined by building age: under 10 years old = Neubau,
- *   10 years or older = Bestand (rolling window against the current year)
+ * - Neubau/Bestand determined by the building-permit application date (KPI 1-1):
+ *   strictly after 31.12.2020 = Neubau, everything else = Bestand
+ * - KPI 1-1 itself only applies from completion year (KPI 1-2) 2021 onwards
  * - Wohnen/Nichtwohnen determined by primary building use (KPI 3-1)
- * - Mandatory KPI matrix enforced on initial submission only
+ * - Mandatory KPI matrix enforced on initial submission; the same rules decide
+ *   whether a record is complete enough to sign (see evaluateCompleteness)
  */
 
 import { BuildingUseEnum, KPI_SECTIONS } from "./schema";
@@ -39,12 +41,24 @@ export interface MissingKpi {
 // =============================================================================
 
 /**
- * A building counts as Neubau (new) while it is under 10 years old; once its
- * age reaches 10 years it is Bestand (existing). Age is a whole-year diff
- * against the current year — e.g. in 2026 a completion year of 2016 gives
- * 2026 - 2016 = 10 → Bestand.
+ * Neubau / Bestand is decided by the building-permit application date (KPI 1-1)
+ * against a fixed cutoff — **not** by the building's age:
+ *
+ *   Neubau  — 1-1 is strictly after 31.12.2020
+ *   Bestand — everything else
+ *
+ * "Everything else" is deliberate and covers three cases with one rule: a
+ * completion year (KPI 1-2) of 2020 or earlier (where 1-1 is not collected at
+ * all), an application date on or before the cutoff, and a missing 1-1 on
+ * machine submissions that bypass the form.
+ *
+ * Replaces a rolling "under 10 years old" window, which classified by age and
+ * ignored 1-1 entirely.
  */
-const NEUBAU_MAX_AGE_YEARS = 10;
+const NEUBAU_CUTOFF_MS = Date.UTC(2020, 11, 31); // 31.12.2020
+
+/** 1-1 is only collected from completion year 2021 onwards. */
+export const BUILDING_APPLICATION_DATE_FROM_YEAR = 2021;
 
 const WOHNEN_VALUES = new Set([
   "Wohnen",
@@ -56,15 +70,34 @@ const WOHNEN_VALUES = new Set([
 // Scenario Derivation
 // =============================================================================
 
-export function computeIsNeubau(constructionYear: string | number): boolean {
-  const year =
-    typeof constructionYear === "number"
-      ? constructionYear
-      : parseInt(String(constructionYear).trim(), 10);
-  if (!Number.isInteger(year)) return false;
+/**
+ * Neubau iff the building-permit application date (KPI 1-1) is strictly after
+ * 31.12.2020. Missing or unparseable date → false (Bestand), which is the
+ * intended default rather than a fallback.
+ */
+export function computeIsNeubau(
+  buildingApplicationDate: string | null | undefined,
+): boolean {
+  if (!buildingApplicationDate) return false;
+  const ms = Date.parse(String(buildingApplicationDate));
+  if (Number.isNaN(ms)) return false;
+  return ms > NEUBAU_CUTOFF_MS;
+}
 
-  const currentYear = new Date().getFullYear();
-  return currentYear - year < NEUBAU_MAX_AGE_YEARS;
+/**
+ * Whether KPI 1-1 applies at all for a completion year: it is collected (and
+ * required) from 2021 onwards, and not shown below that.
+ */
+export function requiresBuildingApplicationDate(
+  completionYear: string | number | null | undefined,
+): boolean {
+  if (completionYear == null) return false;
+  const year =
+    typeof completionYear === "number"
+      ? completionYear
+      : parseInt(String(completionYear).trim(), 10);
+  if (!Number.isInteger(year)) return false;
+  return year >= BUILDING_APPLICATION_DATE_FROM_YEAR;
 }
 
 export function computeIsWohnen(primaryUse: string): boolean {
@@ -93,10 +126,15 @@ export const RECOGNISED_BUILDING_USES: readonly string[] =
   BuildingUseEnum.options;
 
 export function deriveScenario(
-  constructionYear: string | number,
+  completionYear: string | number,
   primaryUse: string,
+  buildingApplicationDate?: string | null,
 ): BuildingScenario {
-  const isNeubau = computeIsNeubau(constructionYear);
+  // Completion year 2020 or earlier is Bestand outright — 1-1 is not collected
+  // there, so any value that reached us for it cannot promote the building.
+  const isNeubau =
+    requiresBuildingApplicationDate(completionYear) &&
+    computeIsNeubau(buildingApplicationDate);
   const isWohnen = computeIsWohnen(primaryUse);
 
   if (isNeubau && isWohnen) return "neubauWohnen";
@@ -245,6 +283,39 @@ export function getMandatorySchemaKeys(scenario: BuildingScenario): string[] {
   return getMandatoryKpis(scenario).map((kpi) => kpi.schemaKey);
 }
 
+/**
+ * KPI 1-1 is required from completion year 2021 onwards, and not collected below
+ * that — so it is conditional on 1-2 rather than on the scenario, and cannot be
+ * expressed as a column in the matrix above. It is also what decides
+ * Neubau/Bestand, so a submission from 2021 on that omits it is not merely
+ * incomplete: it silently classifies as Bestand.
+ */
+const BUILDING_APPLICATION_DATE_KPI: MandatoryKpiDef = {
+  kpiNumber: "1-1",
+  schemaKey: "KPI_1_1_Date_Of_Building_Permit",
+  section: "Property_Related_Data",
+  label: "Date of building permit application",
+  neubauWohnen: true,
+  bestandWohnen: true,
+  neubauNichtwohnen: true,
+  bestandNichtwohnen: true,
+};
+
+/**
+ * Every KPI required for this scenario *and* this completion year — the matrix
+ * plus the conditional 1-1. Use this for enforcement rather than
+ * `getMandatoryKpis`.
+ */
+export function getRequiredKpisForSubmission(
+  scenario: BuildingScenario,
+  completionYear: string | number | null | undefined,
+): MandatoryKpiDef[] {
+  const required = getMandatoryKpis(scenario);
+  if (!requiresBuildingApplicationDate(completionYear)) return required;
+  if (required.some((k) => k.kpiNumber === "1-1")) return required;
+  return [BUILDING_APPLICATION_DATE_KPI, ...required];
+}
+
 // =============================================================================
 // Initial Submission Validation
 // =============================================================================
@@ -262,11 +333,16 @@ type SectionData = Record<string, KpiElement>;
  */
 export function validateInitialSubmission(
   enrichedData: KpiData,
-  constructionYear: string | number,
+  completionYear: string | number,
   primaryUse: string,
+  buildingApplicationDate?: string | null,
 ): InitialSubmissionResult {
-  const scenario = deriveScenario(constructionYear, primaryUse);
-  const required = getMandatoryKpis(scenario);
+  const scenario = deriveScenario(
+    completionYear,
+    primaryUse,
+    buildingApplicationDate,
+  );
+  const required = getRequiredKpisForSubmission(scenario, completionYear);
 
   const missingKpis: MissingKpi[] = [];
 
@@ -345,6 +421,7 @@ export function evaluateCompleteness(data: KpiData): CompletenessResult {
     data,
     inputs.constructionYear,
     inputs.primaryUse,
+    inputs.buildingApplicationDate,
   );
 
   return {
@@ -386,22 +463,33 @@ function unwrapValue(element: KpiElement | undefined): unknown {
  * enriched KPI data. These two are always mandatory and are needed to
  * derive the scenario.
  */
-export function extractScenarioInputs(
-  data: KpiData,
-): { constructionYear: string | number; primaryUse: string } | null {
+export function extractScenarioInputs(data: KpiData): {
+  constructionYear: string | number;
+  primaryUse: string;
+  /** KPI 1-1 — null when absent, which classifies the building as Bestand. */
+  buildingApplicationDate: string | null;
+} | null {
   const prop = data.Property_Related_Data;
   if (!prop) return null;
 
   const yearElement = prop.KPI_1_2_Building_Completion_Year;
   const useElement = prop.KPI_3_1_Main_Use_Of_Building;
+  const applicationElement = prop.KPI_1_1_Date_Of_Building_Permit;
 
   const constructionYear = unwrapValue(yearElement as KpiElement | undefined);
   const primaryUse = unwrapValue(useElement as KpiElement | undefined);
+  const applicationDate = unwrapValue(
+    applicationElement as KpiElement | undefined,
+  );
 
+  // 1-2 and 3-1 are what select the scenario, so without them there is nothing
+  // to derive. 1-1 is optional here: absent means Bestand, not "undeterminable".
   if (constructionYear === undefined || primaryUse === undefined) return null;
 
   return {
     constructionYear: constructionYear as string | number,
     primaryUse: primaryUse as string,
+    buildingApplicationDate:
+      applicationDate === undefined ? null : String(applicationDate),
   };
 }

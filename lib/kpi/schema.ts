@@ -227,20 +227,59 @@ export const KPIValueElementEnergyClassSchema: z.ZodType<KPIValueElementEnergyCl
 // KPIEnergyDataBySourceAndUse — KPI 8-3 structured table (V0.9.2)
 // =============================================================================
 
-export const KPIEnergyDataBySourceAndUseItemSchema = z.object({
-  "Energy carrier": z.string().optional(),
-  TotalValue: z.number().optional(),
-  Heating: z.number().optional(),
-  DomesticHotWater: z.number().optional(),
-  Cooling: z.number().optional(),
-  Lighting: z.number().optional(),
-  Ventilation: z.number().optional(),
-  AdditionalElectricityDemand: z.number().optional(),
-  StartDateForConsumption: z.string().datetime().optional(),
-  EndDateForConsumption: z.string().datetime().optional(),
-  ConversionFactorPrimaryEnergy: z.number().optional(),
-  ValuesAreBasedOnInferiorHeatingValue: z.boolean().optional(),
-}).strict();
+/**
+ * One row of the Endenergieverbrauchstabelle (KPI 8-3).
+ *
+ * The ZIA V0.9.2 row has 12 fixed fields and `additionalProperties: false`, but
+ * the agreed table ("ZIA KPI with EPC Mapping.xlsx", row 34) carries columns
+ * V0.9.2 has no home for — Jahr, Klimabereinigung, Leerstandsbereinigung,
+ * bereinigter Verbrauch, Scope — plus per-row copies of 9-1/9-2/9-4/9-5/9-6.
+ *
+ * A row is therefore stored as **submitted JSON**: known keys are typed, anything
+ * else passes through untouched. Nothing here is computed, derived or mapped; the
+ * per-row emission values duplicate the top-level 9-x KPIs for now and no rule
+ * reads them.
+ *
+ * `.passthrough()` is load-bearing — Zod strips unknown keys by default, so a
+ * plain object schema would silently drop every new column.
+ */
+export const KPIEnergyDataBySourceAndUseItemSchema = z
+  .object({
+    // ZIA V0.9.2 fields — kept, because existing records and partner payloads
+    // already use them.
+    "Energy carrier": z.string().optional(),
+    TotalValue: z.number().optional(),
+    Heating: z.number().optional(),
+    DomesticHotWater: z.number().optional(),
+    Cooling: z.number().optional(),
+    Lighting: z.number().optional(),
+    Ventilation: z.number().optional(),
+    AdditionalElectricityDemand: z.number().optional(),
+    // Plain dates are allowed now: an <input type="date"> yields "2025-01-01",
+    // and every other date KPI (1-1, 7-7) is a plain string. Full ISO
+    // timestamps still pass.
+    StartDateForConsumption: z.string().optional(),
+    EndDateForConsumption: z.string().optional(),
+    ConversionFactorPrimaryEnergy: z.number().optional(),
+    ValuesAreBasedOnInferiorHeatingValue: z.boolean().optional(),
+
+    // Columns of the agreed table — stored only.
+    energy_source: z.string().optional(),
+    final_energy_consumption_kwh: z.number().optional(),
+    year: z.union([z.string(), z.number()]).optional(),
+    start_date: z.string().optional(),
+    end_date: z.string().optional(),
+    usage: z.string().optional(),
+    climate_adjusted: z.union([z.boolean(), z.string()]).optional(),
+    vacancy_adjusted: z.union([z.boolean(), z.string()]).optional(),
+    adjusted_consumption_kwh: z.number().optional(),
+    estimated_share_percent: z.number().optional(),
+    scope: z.string().optional(),
+    emission_factor_kg_co2_per_kwh: z.number().optional(),
+    emission_factor_basis: z.string().optional(),
+    co2_emissions_t: z.number().optional(),
+  })
+  .passthrough();
 
 export type KPIEnergyDataBySourceAndUseItem = z.infer<typeof KPIEnergyDataBySourceAndUseItemSchema>;
 

@@ -16,20 +16,30 @@ const C1EnergyClassValue = z.object({
   reason_for_change: z.string().optional(),
 });
 
-const C1EnergyDataItem = z.object({
-  energy_carrier: z.string().optional(),
-  total_value: z.number().optional(),
-  heating: z.number().optional(),
-  domestic_hot_water: z.number().optional(),
-  cooling: z.number().optional(),
-  lighting: z.number().optional(),
-  ventilation: z.number().optional(),
-  additional_electricity_demand: z.number().optional(),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-  conversion_factor_primary_energy: z.number().optional(),
-  values_based_on_inferior_heating_value: z.boolean().optional(),
-});
+/**
+ * One row of the KPI 8-3 table. The 12 ZIA V0.9.2 fields are typed; the columns
+ * of the agreed table (Jahr, Nutzung, Klima-/Leerstandsbereinigung, bereinigter
+ * Verbrauch, Scope, per-row 9-x values) are accepted as-is and stored verbatim.
+ *
+ * `.passthrough()` is required — Zod strips unknown keys by default, which would
+ * silently drop every column outside the V0.9.2 twelve.
+ */
+const C1EnergyDataItem = z
+  .object({
+    energy_carrier: z.string().optional(),
+    total_value: z.number().optional(),
+    heating: z.number().optional(),
+    domestic_hot_water: z.number().optional(),
+    cooling: z.number().optional(),
+    lighting: z.number().optional(),
+    ventilation: z.number().optional(),
+    additional_electricity_demand: z.number().optional(),
+    start_date: z.string().optional(),
+    end_date: z.string().optional(),
+    conversion_factor_primary_energy: z.number().optional(),
+    values_based_on_inferior_heating_value: z.boolean().optional(),
+  })
+  .passthrough();
 
 const C1EnergyTableValue = z.object({
   values: z.array(C1EnergyDataItem),

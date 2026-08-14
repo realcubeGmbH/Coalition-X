@@ -125,6 +125,10 @@ export interface KpiHistoryResult {
   };
 }
 
+/** The only two provenance values a submission can carry (see resolveDataSource). */
+const DATA_SOURCE_APP = "Erfassungs App";
+const DATA_SOURCE_API = "Realcube Api";
+
 // =============================================================================
 // KPI Service
 // =============================================================================
@@ -445,10 +449,16 @@ export class KpiService {
     }
 
     // 6. Enrich slim input into V0.9.2 rich objects
+    // Provenance for every value's `Source`: a person working in the app, or the
+    // partner's own system when the call carries an org-level (machine) token.
+    // "input" told a report reader nothing about where a number came from.
+    const dataSource = this.resolveDataSource(ctx);
+
     let enrichedData: KpiData | null = null;
     if (parseResult.success) {
       enrichedData = enrichKpiInput(parseResult.data, {
         userId: ctx.userId,
+        source: dataSource,
       });
     }
 
@@ -511,6 +521,7 @@ export class KpiService {
             enrichedData,
             scenarioInputs.constructionYear,
             scenarioInputs.primaryUse,
+            scenarioInputs.buildingApplicationDate,
           );
 
           this.logger.info("Initial submission scenario derived", {
@@ -854,6 +865,24 @@ export class KpiService {
       trackingToken,
       status: 201,
     };
+  }
+
+  /**
+   * Where a submission's values came from, written to each element's `Source`.
+   *
+   * Exactly two values, by product decision:
+   *   "Erfassungs App" — a person submitting through the app (user token)
+   *   "Realcube Api"   — any machine-to-machine call: their integration, Postman,
+   *                      curl, anything that is not the app (org-level token)
+   *
+   * Deliberately *not* the Organization.name — that is an internal label and
+   * whatever it happens to say would leak into the verification report.
+   *
+   * KPI 7-2 is unaffected: its Source is a ZIA enum describing how the energy
+   * class was determined, and a system name there fails validation.
+   */
+  private resolveDataSource(ctx: ServiceContext): string {
+    return ctx.isOrgLevel ? DATA_SOURCE_API : DATA_SOURCE_APP;
   }
 
   /**

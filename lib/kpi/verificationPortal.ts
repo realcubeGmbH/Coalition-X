@@ -30,6 +30,12 @@ export interface SubmissionContext {
   organizationId: string;
   assetId: string | null;
   asset: { externalId: string | null; address: string | null } | null;
+  /**
+   * Which system submitted this: "Erfassungs App" or "Realcube Api" — the same
+   * two values new submissions store. Used to display provenance for records
+   * written before the `Source` field carried it.
+   */
+  dataSource: string;
   /** The submission's own KpiRecord, or null if it never produced one. */
   kpiRecordId: string | null;
   dataVersion: number | null;
@@ -154,6 +160,7 @@ export async function resolveSubmissionContext(
     select: {
       id: true,
       organizationId: true,
+      userId: true,
       resourceId: true,
       validationStatus: true,
     },
@@ -183,6 +190,9 @@ export async function resolveSubmissionContext(
   ]);
 
   const signingStatus = signingStatuses.get(submission.id) ?? "pending";
+  // Submission.userId is null exactly when an org-level (machine) token was used,
+  // so it distinguishes the app from any integration — including for old records.
+  const dataSource = submission.userId ? "Erfassungs App" : "Realcube Api";
   const kpiData = (ownRecord?.kpiData as KpiData | null) ?? null;
   const energyClass =
     ((kpiData?.Energy_Performance as
@@ -198,6 +208,7 @@ export async function resolveSubmissionContext(
     organizationId: submission.organizationId,
     assetId,
     asset,
+    dataSource,
     kpiRecordId: ownRecord?.id ?? null,
     dataVersion: ownRecord?.dataVersion ?? null,
     kpiData,
@@ -234,7 +245,19 @@ export interface KpiRow {
 }
 
 /** Flatten the signed KPI sections into a display table via the KPI registry. */
-export function buildKpiTable(kpiData: KpiData, verified: boolean): KpiRow[] {
+/**
+ * Values stored before provenance existed carry the literal "input", which means
+ * nothing to a verifier. Replace it with the submitting system, derived from the
+ * submission itself. Everything else — the ZIA enum on 7-2, "FraunhoferMethode",
+ * a real system name — is passed through untouched.
+ */
+const LEGACY_SOURCE = "input";
+
+export function buildKpiTable(
+  kpiData: KpiData,
+  verified: boolean,
+  dataSource?: string,
+): KpiRow[] {
   const rows: KpiRow[] = [];
   for (const section of KPI_SECTIONS) {
     const sectionObj = (kpiData as Record<string, unknown>)[section] as
@@ -255,7 +278,8 @@ export function buildKpiTable(kpiData: KpiData, verified: boolean): KpiRow[] {
       // columns. Both are optional in the V0.9.2 schema.
       const submittedAt =
         typeof element.SubmittedAt === "string" ? element.SubmittedAt : null;
-      const source = typeof element.Source === "string" ? element.Source : null;
+      let source = typeof element.Source === "string" ? element.Source : null;
+      if (source === LEGACY_SOURCE && dataSource) source = dataSource;
       rows.push({
         kpiNumber: def?.number ?? schemaKey,
         section,

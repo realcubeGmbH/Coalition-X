@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       orgDid: body.orgDid,
       overallStatus: ctx.overallStatus,
       gueltigBis: ctx.gueltigBis,
-      kpis: buildKpiTable(ctx.kpiData, verified),
+      kpis: buildKpiTable(ctx.kpiData, verified, ctx.dataSource),
     });
   } catch (error) {
     return handleError(error);
