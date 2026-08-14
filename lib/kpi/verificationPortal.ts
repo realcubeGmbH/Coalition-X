@@ -246,12 +246,26 @@ export interface KpiRow {
 
 /** Flatten the signed KPI sections into a display table via the KPI registry. */
 /**
- * Values stored before provenance existed carry the literal "input", which means
- * nothing to a verifier. Replace it with the submitting system, derived from the
- * submission itself. Everything else — the ZIA enum on 7-2, "FraunhoferMethode",
- * a real system name — is passed through untouched.
+ * The only `Source` values a report may show. Anything else in a stored record is
+ * historical noise — the literal "input" from before provenance existed, or an
+ * Organization.name from the window when that was (wrongly) used — and is
+ * replaced with the submitting system derived from the submission itself.
+ *
+ * Normalising on read rather than rewriting records keeps the signed payload
+ * untouched; only the report is corrected.
  */
-const LEGACY_SOURCE = "input";
+const CANONICAL_SOURCES = new Set([
+  // Submitting systems
+  "Erfassungs App",
+  "Realcube Api",
+  // Computed inside Coalition-X
+  "FraunhoferMethode",
+  // KPI 7-2's ZIA enum (how the energy class was determined)
+  "Energieausweis",
+  "BVI",
+  "GModG",
+  "andere",
+]);
 
 export function buildKpiTable(
   kpiData: KpiData,
@@ -279,7 +293,9 @@ export function buildKpiTable(
       const submittedAt =
         typeof element.SubmittedAt === "string" ? element.SubmittedAt : null;
       let source = typeof element.Source === "string" ? element.Source : null;
-      if (source === LEGACY_SOURCE && dataSource) source = dataSource;
+      if (source && dataSource && !CANONICAL_SOURCES.has(source)) {
+        source = dataSource;
+      }
       rows.push({
         kpiNumber: def?.number ?? schemaKey,
         section,
