@@ -28,6 +28,8 @@ export type SigningStatus = "signed" | "pending" | "failed";
 export interface SubmissionContext {
   submissionId: string;
   organizationId: string;
+  /** Name of the submitting organisation — the portal's "Datensatzherkunft". */
+  organizationName: string | null;
   assetId: string | null;
   asset: { externalId: string | null; address: string | null } | null;
   /**
@@ -42,7 +44,13 @@ export interface SubmissionContext {
   kpiData: KpiData | null;
   validationStatus: string;
   signingStatus: SigningStatus;
+  /** KPI 7-7 (EPC expiry). Not an issuance date — see `ausgestelltAm`. */
   gueltigBis: string | null;
+  /**
+   * "Ausgestellt am" — when C3 signed this KPI-Set. Null until it is signed,
+   * because nothing has been issued before then.
+   */
+  ausgestelltAm: string | null;
   overallStatus: OverallStatus;
   /** C2 (Fraunhofer) energy-class calculation status for this submission. */
   fraunhofer: { status: string | null; energyClass: string | null };
@@ -152,6 +160,32 @@ function extractGueltigBis(kpiData: KpiData | null): string | null {
   return v == null ? null : String(v);
 }
 
+/**
+ * "Ausgestellt am" — the instant C3 (Trust Layer) signed this KPI-Set.
+ *
+ * Read from the stored seal response, whose `timestamp` is C3's own signing
+ * time; that is the issuance date of the signed set, as opposed to KPI 7-7's
+ * EPC validity date. Legacy rows whose seal response carries no timestamp fall
+ * back to when the successful attempt was recorded.
+ */
+async function resolveAusgestelltAm(
+  kpiRecordId: string,
+): Promise<string | null> {
+  const signed = await prisma.signingRequest.findFirst({
+    where: { kpiRecordId, status: "SIGNED" },
+    orderBy: { updatedAt: "desc" },
+    select: { verifierDetails: true, lastAttemptAt: true, updatedAt: true },
+  });
+  if (!signed) return null;
+
+  const details = signed.verifierDetails as { timestamp?: unknown } | null;
+  if (typeof details?.timestamp === "string") {
+    const sealed = new Date(details.timestamp);
+    if (!Number.isNaN(sealed.getTime())) return sealed.toISOString();
+  }
+  return (signed.lastAttemptAt ?? signed.updatedAt).toISOString();
+}
+
 export async function resolveSubmissionContext(
   submissionId: string,
 ): Promise<SubmissionContext | null> {
@@ -160,6 +194,7 @@ export async function resolveSubmissionContext(
     select: {
       id: true,
       organizationId: true,
+      organization: { select: { name: true } },
       userId: true,
       resourceId: true,
       validationStatus: true,
@@ -202,10 +237,17 @@ export async function resolveSubmissionContext(
     submission.validationStatus,
     signingStatus,
   );
+  // Only signed records have an issuance date, so an unsigned submission skips
+  // the lookup entirely rather than querying for a row that cannot exist.
+  const ausgestelltAm =
+    ownRecord && signingStatus === "signed"
+      ? await resolveAusgestelltAm(ownRecord.id)
+      : null;
 
   return {
     submissionId: submission.id,
     organizationId: submission.organizationId,
+    organizationName: submission.organization?.name ?? null,
     assetId,
     asset,
     dataSource,
@@ -215,6 +257,7 @@ export async function resolveSubmissionContext(
     validationStatus: submission.validationStatus,
     signingStatus,
     gueltigBis: extractGueltigBis(kpiData),
+    ausgestelltAm,
     overallStatus,
     fraunhofer: { status: fraunhoferRequest?.status ?? null, energyClass },
   };

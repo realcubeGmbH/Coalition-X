@@ -52,10 +52,12 @@ export async function POST(request: Request) {
     return NextResponse.json({
       asset: ctx.asset ?? { externalId: null, address: null },
       dataVersion: ctx.dataVersion,
+      organizationName: ctx.organizationName,
       validationStatus: ctx.validationStatus,
       signing: { status: ctx.signingStatus },
       fraunhofer: ctx.fraunhofer,
       overallStatus: ctx.overallStatus,
+      ausgestelltAm: ctx.ausgestelltAm,
       gueltigBis: ctx.gueltigBis,
     });
   } catch (error) {

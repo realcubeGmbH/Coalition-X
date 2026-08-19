@@ -82,7 +82,9 @@ export async function POST(request: Request) {
       asset: ctx.asset ?? { externalId: null, address: null },
       dataVersion: ctx.dataVersion,
       orgDid: body.orgDid,
+      organizationName: ctx.organizationName,
       overallStatus: ctx.overallStatus,
+      ausgestelltAm: ctx.ausgestelltAm,
       gueltigBis: ctx.gueltigBis,
       kpis: buildKpiTable(ctx.kpiData, verified, ctx.dataSource),
     });
