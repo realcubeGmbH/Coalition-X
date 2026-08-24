@@ -500,7 +500,9 @@ export const KPI_REGISTRY: Record<string, KpiDefinition> = {
       residential: true,
       nonResidential: true,
     },
-    enumValues: ["YES_CA", "YES_CE", "YES_CM", "NO"],
+    // NOT_ASSESSED = the taxonomy check was never carried out, which is a
+    // different answer from NO (checked, not aligned).
+    enumValues: ["YES_CA", "YES_CE", "YES_CM", "NO", "NOT_ASSESSED"],
     elementType: "KPIValueElement",
     schemaKey: "KPI_6_1_Object_Is_Taxonomy_Aligned",
     schemaSection: "Property_Related_Data",

@@ -224,9 +224,13 @@ const MANDATORY_KPIS: MandatoryKpiDef[] = [
     schemaKey: "KPI_7_7_EPC_Expiry_Date",
     section: "Energy_Performance",
     label: "EPC expiry date",
-    neubauWohnen: true,
+    // Not required for Neubau: a building still being built has no EPC expiry
+    // date to quote yet. Kept in step with the erfassungs-app's KPI matrix
+    // (src/config/kpiScenarios.ts), which marks 7-7 optional for both Neubau
+    // scenarios — enforcing it here would fail those submissions server-side.
+    neubauWohnen: false,
     bestandWohnen: true,
-    neubauNichtwohnen: true,
+    neubauNichtwohnen: false,
     bestandNichtwohnen: true,
   },
   {
